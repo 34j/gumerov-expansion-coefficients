@@ -152,12 +152,7 @@
   color: (
     stroke: blue,
   ),
-)[
-  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - 1 and 1 <= m = n <= N$
-
-  ↓
-
-  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and m = n <= N$
+)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and m = n <= N$
 ]
 
 #theorem[4.34 (swapped)][
@@ -244,12 +239,7 @@
   color: (
     stroke: blue,
   ),
-)[
-  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - 1 and 1 <= -m = n <= N$
-
-  ↓
-
-  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and -m = n <= N$
+)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and -m = n <= N$
 ]
 
 #theorem[4.7-9][
@@ -299,16 +289,16 @@ $abs(m') < m$
   anchor("x2", (7, 3))
   anchor("x3", (7, 1))
   anchor("x4", (8, 2))
-  line("x1", "x2", mark: (end: ">"))
-  line("x3", "x2", mark: (end: ">"))
-  line("x4", "x2", mark: (end: ">"))
+  line("x1", "x2", mark: (start: "o", end: ">"))
+  line("x3", "x2", mark: (start: "o", end: ">"))
+  line("x4", "x2", mark: (start: "o", end: ">"))
   anchor("x5", (3, 7))
   anchor("x6", (4, 8))
   anchor("x7", (4, 6))
   anchor("x8", (5, 7))
-  line("x5", "x8", mark: (end: ">"))
-  line("x6", "x8", mark: (end: ">"))
-  line("x7", "x8", mark: (end: ">"))
+  line("x5", "x8", mark: (start: "o", end: ">"))
+  line("x6", "x8", mark: (start: "o", end: ">"))
+  line("x7", "x8", mark: (start: "o", end: ">"))
   rect((m - 0.2, md - 0.2), (N, N), fill: maroon.transparentize(50%))
   line((m, md), (2 * N - md, md), stroke: yellow + 2pt)
   content((l, md), [$n' = abs(m')$])
