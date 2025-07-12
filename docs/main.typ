@@ -329,3 +329,8 @@ $abs(m') < m$
   )
   content((m / 2, md / 2), [$0$ (@zero)])
 })
+
+#remark[
+  All operations above can be performed without using nested for-loop.
+  Only $Theta(N)$ recursion is needed.
+]
