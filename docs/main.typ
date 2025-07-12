@@ -316,6 +316,10 @@ $abs(m') < m$
   line((m, md), (m, 2 * N - m), stroke: blue + 2pt)
   content((m, l), [$n = abs(m)$])
   content((m, 0), $abs(m)$, anchor: "north")
+  content((0, N), $N$, anchor: "east")
+  content((0, 2 * N - m), $2N-abs(m)$, anchor: "east")
+  content((N, 0), $N$, anchor: "north")
+  content((2 * N - md, 0), $2N-abs(m')$, anchor: "north")
   line(
     (0, 0),
     (l, 0),
