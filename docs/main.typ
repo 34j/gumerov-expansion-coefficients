@@ -198,16 +198,25 @@ $abs(m') < m$
   import cetz.draw: *
   let l = 12
   let k = l - 0.4
+  let md = 1
+  let m = 3
   line((0, 0), (l, 0), mark: (end: ">"))
   line((0, 0), (0,  l), mark: (end: ">"))
-  content((l, 0), $n'$, anchor: "west")
-  content((0, l), $n$, anchor: "south")
-  grid((0, 0), (l, l), step: 1.0, stroke: gray + 0.2pt)
+  content((l, 0), $n$, anchor: "west")
+  content((0, l), $n'$, anchor: "south")
+  grid((0, 0), (k, k), step: 1.0, stroke: gray + 0.2pt)
   anchor("x1", (1, 2))
   anchor("x2", (2, 3))
   anchor("x3", (2, 1))
   anchor("x4", (3, 2))
   line("x3", "x2", mark: (end: ">"))
   line("x4", "x2", mark: (end: ">"))
-
+  line((m, md), (l, md), stroke: blue + 2pt)
+  content((l, md), [$n' = abs(m')$])
+  content((0, md), $abs(m')$, anchor: "east")
+  line((m, md), (m, l), stroke: red + 2pt)
+  content((m, l), [$n = abs(m)$])
+  content((m, 0), $abs(m)$, anchor: "north")
+  line((0, 0), (l, 0), (l, md), (m, md), (m, l), (0, l), close: true, stroke: none, fill: gray.transparentize(50%))
+  content((m/2, md/2), [$0$ (@zero)])
 })
