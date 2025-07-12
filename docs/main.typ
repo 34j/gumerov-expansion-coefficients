@@ -68,7 +68,9 @@
 #colorbox(
   title: "Calculated",
   color: (stroke: red),
-)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N and m = n = 0$]
+)[
+  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N and m = n = 0$
+]
 
 #theorem[4.30][
   $
@@ -96,25 +98,26 @@
       })
       on-xy({
         line(
-          (0, 0),
-          (k, k),
-          (k, -k),
+          (0, -0.2),
+          (0, 0 + 0.2),
+          (k, k + 0.2),
+          (k, -k - 0.2),
           close: true,
           fill: red.transparentize(50%),
           stroke: none,
         )
         line(
-          (0, 0),
-          (k, k),
-          (0, k),
+          (0, 0.2),
+          (k, k + 0.2),
+          (0, k + 0.2),
           close: true,
           fill: gray.transparentize(50%),
           stroke: none,
         )
         line(
-          (0, 0),
-          (k, -k),
-          (0, -k),
+          (0, -0.2),
+          (k, -k - 0.2),
+          (0, -k - 0.2),
           close: true,
           fill: gray.transparentize(50%),
           stroke: none,
@@ -149,7 +152,13 @@
   color: (
     stroke: blue,
   ),
-)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and m = n <= N$]
+)[
+  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - 1 and 1 <= m = n <= N$
+
+  ↓
+
+  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and m = n <= N$
+]
 
 #theorem[4.34 (swapped)][
   $
@@ -177,25 +186,26 @@
       })
       on-xy({
         line(
-          (0, 0),
-          (k, k),
-          (k, -k),
+          (0, -0.2),
+          (0, 0 + 0.2),
+          (k, k + 0.2),
+          (k, -k - 0.2),
           close: true,
           fill: red.transparentize(50%),
           stroke: none,
         )
         line(
-          (0, 0),
-          (k, k),
-          (0, k),
+          (0, 0.2),
+          (k, k + 0.2),
+          (0, k + 0.2),
           close: true,
           fill: gray.transparentize(50%),
           stroke: none,
         )
         line(
-          (0, 0),
-          (k, -k),
-          (0, -k),
+          (0, -0.2),
+          (k, -k - 0.2),
+          (0, -k - 0.2),
           close: true,
           fill: gray.transparentize(50%),
           stroke: none,
@@ -234,7 +244,13 @@
   color: (
     stroke: blue,
   ),
-)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and -m = n <= N$]
+)[
+  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - 1 and 1 <= -m = n <= N$
+
+  ↓
+
+  $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and -m = n <= N$
+]
 
 #theorem[4.7-9][
   $
@@ -269,33 +285,43 @@ $abs(m') < m$
 
 #cetz.canvas({
   import cetz.draw: *
-  let l = 12
+  let l = 13
   let k = l - 0.4
   let md = 1
   let m = 3
+  let N = 6
   line((0, 0), (l, 0), mark: (end: ">"))
   line((0, 0), (0, l), mark: (end: ">"))
   content((l, 0), $n$, anchor: "west")
   content((0, l), $n'$, anchor: "south")
   grid((0, 0), (k, k), step: 1.0, stroke: gray + 0.2pt)
-  anchor("x1", (1, 2))
-  anchor("x2", (2, 3))
-  anchor("x3", (2, 1))
-  anchor("x4", (3, 2))
+  anchor("x1", (6, 2))
+  anchor("x2", (7, 3))
+  anchor("x3", (7, 1))
+  anchor("x4", (8, 2))
+  line("x1", "x2", mark: (end: ">"))
   line("x3", "x2", mark: (end: ">"))
   line("x4", "x2", mark: (end: ">"))
-  line((m, md), (l, md), stroke: yellow + 2pt)
+  anchor("x5", (3, 7))
+  anchor("x6", (4, 8))
+  anchor("x7", (4, 6))
+  anchor("x8", (5, 7))
+  line("x5", "x8", mark: (end: ">"))
+  line("x6", "x8", mark: (end: ">"))
+  line("x7", "x8", mark: (end: ">"))
+  rect((m - 0.2, md - 0.2), (N, N), fill: maroon.transparentize(50%))
+  line((m, md), (2 * N - md, md), stroke: yellow + 2pt)
   content((l, md), [$n' = abs(m')$])
   content((0, md), $abs(m')$, anchor: "east")
-  line((m, md), (m, l), stroke: blue + 2pt)
+  line((m, md), (m, 2 * N - m), stroke: blue + 2pt)
   content((m, l), [$n = abs(m)$])
   content((m, 0), $abs(m)$, anchor: "north")
   line(
     (0, 0),
     (l, 0),
-    (l, md),
-    (m, md),
-    (m, l),
+    (l, md - 0.2),
+    (m - 0.2, md - 0.2),
+    (m - 0.2, l),
     (0, l),
     close: true,
     stroke: none,
