@@ -48,12 +48,12 @@
   E^m_n (x + t) = sum_(m', n') efc^(m' m)_(n' n) (t) F^m'_n' (x)
   $
 ]
-#theorem[4.26][
+
+== Main part
+
+#theorem[4.43, 4.58][
   $
-  a^m_(n-1) efc^(m' m)_(n' n-1) - a^m_n efc^(m' m)_(n' n+1) = a^m'_n' efc^(m' m)_(n' + 1 n) - a^m'_(n' - 1) efc^(m' m)_(n' - 1 n)
-  $
-  $
-  a^m_n = 1_(abs(m) <= n) sqrt(((n + 1 + abs(m)) (n + 1 - abs(m)))/((2n+1)(2n+3)))
+  efc^(m' 0)_(n' 0) (t) = 1_(abs(m') < n) sqrt(4 pi) (-1)^n cases(R &(E = F),S &(E != F))^(-m')_n' (t)
   $
 ]
 #theorem[4.30][
@@ -68,7 +68,7 @@
 #cetz.canvas({
   import cetz.draw: *
   let AXIS_LENGTH = 2.8
-  ortho(x: 20deg, y: -30deg, z: 0deg, {
+  ortho(x: 15deg, y: -30deg, z: 0deg, {
     line((0, 0, 0), (0, 0, AXIS_LENGTH), mark: (end: ">"))
     line((0, 0, 0), (0, AXIS_LENGTH, 0), mark: (end: ">"))
     line((0, 0, 0), (AXIS_LENGTH, 0, 0), mark: (end: ">"))
@@ -76,22 +76,24 @@
       grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
     })
     on-xy({
+      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (AXIS_LENGTH - 0.4, 0), close: true, fill: red.transparentize(50%), stroke: none)
+      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (0, AXIS_LENGTH - 0.4), close: true, fill: gray.transparentize(50%), stroke: none)
       grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
     })
     on-yz({
       grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
     })
-    anchor("x2", (1, 1, 1))
-    anchor("x3", (0, 2, 0))
-    anchor("x4", (0, 0, 0))
+    anchor("x2", (1, 2, 2))
+    anchor("x3", (2, 1, 1))
+    anchor("x4", (0, 1, 1))
     circle("x2", fill: black, radius: 0.1)
     circle("x3", fill: black, radius: 0.1)
     circle("x4", fill: black, radius: 0.1)
-    content("x2", $(m',n',m+1)$, anchor: "west")
-    content("x3", $(m'-1,n'+1,m)$, anchor: "east")
-    content("x4", $(m'-1,n'-1,m)$, anchor: "east")
-    content((AXIS_LENGTH, 0, 0), $m'$, anchor: "west")
-    content((0, AXIS_LENGTH, 0), $n'$, anchor: "west")
+    content("x2", $(n',m',m+1)$, anchor: "west")
+    content("x3", $(n'+1,m'-1,m)$, anchor: "east")
+    content("x4", $(n'-1,m'-1,m)$, anchor: "east")
+    content((AXIS_LENGTH, 0, 0), $n'$, anchor: "west")
+    content((0, AXIS_LENGTH, 0), $m'$, anchor: "west")
     content((0, 0, AXIS_LENGTH), $m = n$, anchor: "west")
     line("x3", "x2", mark: (end: ">"))
     line("x4", "x2", mark: (end: ">"))
@@ -105,13 +107,18 @@
   b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
   $
 ]
+
+#theorem[4.26][
+  $
+  a^m_(n-1) efc^(m' m)_(n' n-1) - a^m_n efc^(m' m)_(n' n+1) = a^m'_n' efc^(m' m)_(n' + 1 n) - a^m'_(n' - 1) efc^(m' m)_(n' - 1 n)
+  $
+  $
+  a^m_n = 1_(abs(m) <= n) sqrt(((n + 1 + abs(m)) (n + 1 - abs(m)))/((2n+1)(2n+3)))
+  $
+]
+
 #theorem[4.7-9][
   $
   efc^(m' m)_(n' n) = (-1)^(n + n') efc^(m m')_(n n')
-  $
-]
-#theorem[4.43, 4.58][
-  $
-  efc^(m' 0)_(n' 0) (t) = sqrt(4 pi) (-1)^n cases(R &(E = F),S &(E != F))^(-m')_n' (t)
   $
 ]
