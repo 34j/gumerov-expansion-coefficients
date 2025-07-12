@@ -111,9 +111,9 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
 
 Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
 
-#theorem[4.34][
+#theorem[4.34 (swapped)][
   $
-  b^(m-1)_(n+1) efc^(m' m-1)_(n' n+1) - b^(-m)_n underbrace(efc^(m' m-1)_(n' n-1), m = -n ==> 0) = b^m'_n' efc^(m'+1 m)_(n'-1 n) - b^(-m'-1)_(n'+1) efc^(m'+1 m)_(n'+1 n)
+  b^m'_n' efc^(m'+1 m)_(n'-1 n) - b^(-m'-1)_(n'+1) efc^(m'+1 m)_(n'+1 n) = b^(m-1)_(n+1) efc^(m' m-1)_(n' n+1) - b^(-m)_n underbrace(efc^(m' m-1)_(n' n-1), m = -n ==> 0)
   $
   $
   b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
@@ -148,9 +148,9 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
     circle("x2", fill: black, radius: 0.1)
     circle("x3", fill: black, radius: 0.1)
     circle("x4", fill: black, radius: 0.1)
-    content("x2", [1: $(n',m',n+1)$], anchor: "west")
-    content("x3", [3: $(n'+1,m'+1),n)$], anchor: "east")
-    content("x4", [4: $(n'-1,m'+1),n)$], anchor: "east")
+    content("x2", [3: $(n',m',n+1)$], anchor: "west")
+    content("x3", [1: $(n'+1,m'+1),n)$], anchor: "east")
+    content("x4", [2: $(n'-1,m'+1),n)$], anchor: "east")
     content((l, 0, 0), $n'$, anchor: "west")
     content((0, l, 0), $m'$, anchor: "west")
     content((0, 0, l), $- m = n$, anchor: "west")
