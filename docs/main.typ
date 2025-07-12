@@ -2,6 +2,7 @@
 #import "@preview/physica:0.9.2": *
 #import "@preview/ctheorems:1.1.3": *
 #import "@preview/cetz:0.3.1"
+#import "@preview/colorful-boxes:1.4.3": colorbox
 
 #import algorithmic: algorithm
 #let thmboxargs = (inset: 0em, padding: (top: 0em, bottom: 0em))
@@ -11,7 +12,9 @@
 #let corollary = thmbox("corollary", "Corollary", ..thmboxargs)
 #let example = thmbox("example", "Example", ..thmboxargs)
 #let axiom = thmbox("axiom", "Axiom", ..thmboxargs)
+#let remark = thmbox("remark", "Remark", ..thmboxargs)
 #let proof = thmproof("proof", "Proof")
+#let calculated(..args) = colorbox(..args, title: "Calculated")
 #show: thmrules
 
 // functions
@@ -42,7 +45,7 @@
   $
   not (abs(m) <= n and abs(m') <= n') ==> efc^(m' m)_(n' n) = 0
   $
-]
+] <zero>
 #theorem[2.18-19][
   $
   E^m_n (x + t) = sum_(m', n') efc^(m' m)_(n' n) (t) F^m'_n' (x)
@@ -51,7 +54,7 @@
 
 == Main part
 
-Goal: Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N$
+#colorbox(title: "Goal")[Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N$]
 
 #theorem[4.43, 4.58][
   $
@@ -68,7 +71,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   $
   b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
   $
-]
+] <b1>
 
 #cetz.canvas({
   import cetz.draw: *
@@ -86,7 +89,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
       line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
       line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
-      content((k*0.3, -k*0.7), [0])
+      content((k*0.3, -k*0.7), [0 (@zero)])
       content((k*0.7, -k*0.3), [@init], anchor: "west")
     })
     on-yz({
@@ -109,7 +112,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   })
 })
 
-Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
+#calculated[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$]
 
 #theorem[4.34 (swapped)][
   $
@@ -118,7 +121,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
   $
   b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
   $
-]
+] <b2>
 
 #cetz.canvas({
   import cetz.draw: *
@@ -136,7 +139,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
       line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
       line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
-      content((k*0.3, -k*0.7), [0])
+      content((k*0.3, -k*0.7), [0 (@zero)])
       content((k*0.7, -k*0.3), [@init], anchor: "west")
     })
     on-yz({
@@ -159,7 +162,22 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
   })
 })
 
-Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$
+#proof[
+  Apply @swap to @b1.
+]
+
+#calculated[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$]
+
+#theorem[4.7-9][
+  $
+  efc^(m' m)_(n' n) = (-1)^(n + n') efc^(m m')_(n n')
+  $
+] <swap>
+
+#calculated[
+  - $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) = n <= N$
+  - $efc^(m',m)_(n',n)$ for $abs(m) <= n <= N and abs(m') = n' <= N$
+]
 
 #theorem[4.26][
   $
@@ -170,8 +188,26 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$
   $
 ]
 
-#theorem[4.7-9][
-  $
-  efc^(m' m)_(n' n) = (-1)^(n + n') efc^(m m')_(n n')
-  $
+#remark[
+$m, m'$ are fixed.
 ]
+
+$abs(m') < m$
+
+#cetz.canvas({
+  import cetz.draw: *
+  let l = 12
+  let k = l - 0.4
+  line((0, 0), (l, 0), mark: (end: ">"))
+  line((0, 0), (0,  l), mark: (end: ">"))
+  content((l, 0), $n'$, anchor: "west")
+  content((0, l), $n$, anchor: "south")
+  grid((0, 0), (l, l), step: 1.0, stroke: gray + 0.2pt)
+  anchor("x1", (1, 2))
+  anchor("x2", (2, 3))
+  anchor("x3", (2, 1))
+  anchor("x4", (3, 2))
+  line("x3", "x2", mark: (end: ">"))
+  line("x4", "x2", mark: (end: ">"))
+
+})
