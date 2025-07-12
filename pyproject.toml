@@ -4,7 +4,7 @@ requires = [ "setuptools" ]
 
 [project]
 name = "gumerov-expansion-coefficients"
-version = "0.0.1"
+version = "1.0.0-rc.1"
 description = "Multiple translation and rotation coefficients for the 3D Helmholtz Equation"
 readme = "README.md"
 license = { text = "MIT" }
