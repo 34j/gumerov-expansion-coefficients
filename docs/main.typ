@@ -332,5 +332,5 @@ $abs(m') < m$
 
 #remark[
   All operations above can be performed without using nested for-loop.
-  Only $Theta(N)$ recursion is needed.
+  Only $Theta(N)$ recursion is needed and other operations can be done concurrently.
 ]
