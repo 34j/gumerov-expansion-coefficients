@@ -54,7 +54,7 @@
 
 == Main part
 
-#colorbox(title: "Goal")[Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N$]
+#colorbox(title: "Goal", color: (stroke: maroon))[Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N$]
 
 #theorem[4.43, 4.58][
   $
@@ -62,7 +62,7 @@
   $
 ] <init>
 
-Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
+#colorbox(title: "Calculated", color: (stroke: red))[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$]
 
 #theorem[4.30][
   $
@@ -112,7 +112,9 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   })
 })
 
-#calculated[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$]
+#colorbox(title: "Calculated", color: (
+    stroke: blue,
+  ),)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$]
 
 #theorem[4.34 (swapped)][
   $
@@ -166,7 +168,9 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   Apply @swap to @b1.
 ]
 
-#calculated[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$]
+#colorbox(title: "Calculated", color: (
+    stroke: blue,
+  ),)[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$]
 
 #theorem[4.7-9][
   $
@@ -174,9 +178,11 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   $
 ] <swap>
 
-#calculated[
-  - $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) = n <= N$
-  - $efc^(m',m)_(n',n)$ for $abs(m) <= n <= N and abs(m') = n' <= N$
+#colorbox(title: "Calculated", color: (
+    stroke: yellow,
+  ),)[
+  //- $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) = n <= N$
+  $efc^(m',m)_(n',n)$ for $abs(m) <= n <= N and abs(m') = n' <= N$
 ]
 
 #theorem[4.26][
@@ -211,10 +217,10 @@ $abs(m') < m$
   anchor("x4", (3, 2))
   line("x3", "x2", mark: (end: ">"))
   line("x4", "x2", mark: (end: ">"))
-  line((m, md), (l, md), stroke: blue + 2pt)
+  line((m, md), (l, md), stroke: yellow + 2pt)
   content((l, md), [$n' = abs(m')$])
   content((0, md), $abs(m')$, anchor: "east")
-  line((m, md), (m, l), stroke: red + 2pt)
+  line((m, md), (m, l), stroke: blue + 2pt)
   content((m, l), [$n = abs(m)$])
   content((m, 0), $abs(m)$, anchor: "north")
   line((0, 0), (l, 0), (l, md), (m, md), (m, l), (0, l), close: true, stroke: none, fill: gray.transparentize(50%))
