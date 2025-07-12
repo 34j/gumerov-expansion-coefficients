@@ -29,6 +29,8 @@
 #let sign = $op("sign")$
 #let ip(x, y) = $lr(( #x, #y ))$
 
+= Translation
+
 #definition[
   $
     efc^(m' n)_(n' n) &= (2 pi)^(3 / 2) sqrt(2/pi) sum_(n'',m'') (-i)^(n - n' - n'') cases(R &(E = F),S &(E != F))^(m'')_(n'') (t) \
@@ -327,4 +329,25 @@ $abs(m') < m$
 #remark[
   All operations above can be performed without using nested for-loop.
   Only $Theta(N)$ recursion is needed and other operations can be done concurrently.
+]
+
+= Rotation
+
+Rotation is not related to Helmholtz equation.
+
+$
+  T^(m' m)_n (Q) := ip(Y^m_n (theta, phi), Y^m'_n (theta', phi'))
+$
+$
+  Q: SS^2 -> SS^2, (theta, phi) |-> (theta', phi')
+$
+
+$
+  Y^m_n (theta, phi) = sum_(abs(m') <= n) T^(m' m)_n (Q) Y^(m')_n (theta', phi')
+$
+
+#theorem[
+  $
+    T^(m' 0)_n = sqrt((4 pi)/(2 n + 1)) Y^(-m')_n (theta', phi')
+  $
 ]
