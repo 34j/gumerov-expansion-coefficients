@@ -57,7 +57,15 @@
 ]
 #theorem[4.30][
   $
-  b^m_(n-1) efc^(m' m+1)_(n' n-1) - b^(-m-1)_(n+1) efc^(m' m)_(n' n+1) = b^(m'-1)_(n'+1) efc^(m' m)_(n' + 1 n) - b^(-m')_(n') efc^(m' m)_(n' - 1 n)
+  b^m_n efc^(m' m+1)_(n' n-1) - b^(-m-1)_(n+1) efc^(m' m+1)_(n' n+1) = b^(m'-1)_(n'+1) efc^(m'-1 m)_(n' + 1 n) - b^(-m')_(n') efc^(m'-1 m)_(n' - 1 n)
+  $
+  $
+  b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
+  $
+]
+#theorem[4.34][
+  $
+  b^(m-1)_(n+1) efc^(m' m-1)_(n' n+1) - b^(-m)_n efc^(m' m-1)_(n' n-1) = b^m'_n' efc^(m'+1 m)_(n'-1 n) - b^(-m'-1)_(n'+1) efc^(m'+1 m)_(n'+1 n)
   $
   $
   b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
