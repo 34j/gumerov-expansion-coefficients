@@ -59,7 +59,7 @@ Goal: Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N
   $
 ]
 
-$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
+Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
 
 #theorem[4.30][
   $
@@ -72,21 +72,23 @@ $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
 
 #cetz.canvas({
   import cetz.draw: *
-  let AXIS_LENGTH = 2.8
+  let l = 2.8
+  let k = l - 0.4
   ortho(x: 15deg, y: -30deg, z: 0deg, {
-    line((0, 0, 0), (0, 0, AXIS_LENGTH), mark: (end: ">"))
-    line((0, 0, 0), (0, AXIS_LENGTH, 0), mark: (end: ">"))
-    line((0, 0, 0), (AXIS_LENGTH, 0, 0), mark: (end: ">"))
+    line((0, 0, 0), (0, 0, l), mark: (end: ">"))
+    line((0, -l, 0), (0, l, 0), mark: (end: ">"))
+    line((0, 0, 0), (l, 0, 0), mark: (end: ">"))
     on-xz({
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      grid((0, 0), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
     on-xy({
-      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (AXIS_LENGTH - 0.4, 0), close: true, fill: red.transparentize(50%), stroke: none)
-      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (0, AXIS_LENGTH - 0.4), close: true, fill: gray.transparentize(50%), stroke: none)
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      line((0, 0), (k, k), (k, -k), close: true, fill: red.transparentize(50%), stroke: none)
+      line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
+      line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
+      grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
     on-yz({
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
     anchor("x2", (1, 2, 2))
     anchor("x3", (2, 1, 1))
@@ -97,15 +99,15 @@ $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
     content("x2", $(n',m',n+1)$, anchor: "west")
     content("x3", $(n'+1,m'-1,n)$, anchor: "east")
     content("x4", $(n'-1,m'-1,n)$, anchor: "east")
-    content((AXIS_LENGTH, 0, 0), $n'$, anchor: "west")
-    content((0, AXIS_LENGTH, 0), $m'$, anchor: "west")
-    content((0, 0, AXIS_LENGTH), $m = n$, anchor: "west")
+    content((l, 0, 0), $n'$, anchor: "west")
+    content((0, l, 0), $m'$, anchor: "west")
+    content((0, 0, l), $m = n$, anchor: "west")
     line("x3", "x2", mark: (end: ">"))
     line("x4", "x2", mark: (end: ">"))
   })
 })
 
-$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
+Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
 
 #theorem[4.34][
   $
@@ -118,40 +120,42 @@ $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
 
 #cetz.canvas({
   import cetz.draw: *
-  let AXIS_LENGTH = 2.8
+  let l = 2.8
+  let k = l - 0.4
   ortho(x: 15deg, y: -30deg, z: 0deg, {
-    line((0, 0, 0), (0, 0, AXIS_LENGTH), mark: (end: ">"))
-    line((0, 0, 0), (0, AXIS_LENGTH, 0), mark: (end: ">"))
-    line((0, 0, 0), (AXIS_LENGTH, 0, 0), mark: (end: ">"))
+    line((0, 0, 0), (0, 0, l), mark: (end: ">"))
+    line((0, -l, 0), (0, l, 0), mark: (end: ">"))
+    line((0, 0, 0), (l, 0, 0), mark: (end: ">"))
     on-xz({
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      grid((0, 0), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
     on-xy({
-      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (AXIS_LENGTH - 0.4, 0), close: true, fill: red.transparentize(50%), stroke: none)
-      line((0, 0), (AXIS_LENGTH - 0.4, AXIS_LENGTH - 0.4), (0, AXIS_LENGTH - 0.4), close: true, fill: gray.transparentize(50%), stroke: none)
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      line((0, 0), (k, k), (k, -k), close: true, fill: red.transparentize(50%), stroke: none)
+      line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
+      line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
+      grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
     on-yz({
-      grid((0, 0), (AXIS_LENGTH, AXIS_LENGTH), step: 1.0, stroke: gray + 0.2pt)
+      grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
     })
-    anchor("x2", (1, 2, 2))
-    anchor("x3", (2, 1, 1))
-    anchor("x4", (0, 1, 1))
+    anchor("x2", (1, 1, 2))
+    anchor("x3", (2, 2, 1))
+    anchor("x4", (0, 2, 1))
     circle("x2", fill: black, radius: 0.1)
     circle("x3", fill: black, radius: 0.1)
     circle("x4", fill: black, radius: 0.1)
     content("x2", [1: $(n',m',n+1)$], anchor: "west")
-    content("x3", [3: $(n'+1,m'-1,n)$], anchor: "east")
-    content("x4", [4: $(n'-1,m'-1,n)$], anchor: "east")
-    content((AXIS_LENGTH, 0, 0), $n'$, anchor: "west")
-    content((0, AXIS_LENGTH, 0), $m'$, anchor: "west")
-    content((0, 0, AXIS_LENGTH), $- m = n$, anchor: "west")
+    content("x3", [3: $(n'+1,m'+1),n)$], anchor: "east")
+    content("x4", [4: $(n'-1,m'+1),n)$], anchor: "east")
+    content((l, 0, 0), $n'$, anchor: "west")
+    content((0, l, 0), $m'$, anchor: "west")
+    content((0, 0, l), $- m = n$, anchor: "west")
     line("x3", "x2", mark: (end: ">"))
     line("x4", "x2", mark: (end: ">"))
   })
 })
 
-$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$
+Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and -m = n <= N$
 
 #theorem[4.26][
   $
