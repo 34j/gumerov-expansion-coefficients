@@ -55,3 +55,14 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: []
+  - repo: local
+    hooks:
+      - id: typstyle
+        name: typstyle
+        description: Format files with typstyle
+        entry: typstyle
+        language: rust
+        types: [file]
+        additional_dependencies: ["cli:typstyle:0.12.14"]
+        files: \.typ$
+        args: [-i]
