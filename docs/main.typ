@@ -57,7 +57,7 @@ Goal: Calculate $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and abs(m) <= n <= N
   $
   efc^(m' 0)_(n' 0) (t) = 1_(abs(m') < n) sqrt(4 pi) (-1)^n cases(R &(E = F),S &(E != F))^(-m')_n' (t)
   $
-]
+] <init>
 
 Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
 
@@ -74,7 +74,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
   import cetz.draw: *
   let l = 2.8
   let k = l - 0.4
-  ortho(x: 15deg, y: -30deg, z: 0deg, {
+  ortho(x: 18deg, y: -30deg, z: 0deg, {
     line((0, 0, 0), (0, 0, l), mark: (end: ">"))
     line((0, -l, 0), (0, l, 0), mark: (end: ">"))
     line((0, 0, 0), (l, 0, 0), mark: (end: ">"))
@@ -86,6 +86,8 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
       line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
       line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
+      content((k*0.3, -k*0.7), [0])
+      content((k*0.7, -k*0.3), [@init], anchor: "west")
     })
     on-yz({
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
@@ -96,9 +98,9 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n = 0$
     circle("x2", fill: black, radius: 0.1)
     circle("x3", fill: black, radius: 0.1)
     circle("x4", fill: black, radius: 0.1)
-    content("x2", $(n',m',n+1)$, anchor: "west")
-    content("x3", $(n'+1,m'-1,n)$, anchor: "east")
-    content("x4", $(n'-1,m'-1,n)$, anchor: "east")
+    content("x2", [2: $(n',m',n+1)$], anchor: "west")
+    content("x3", [3: $(n'+1,m'-1,n)$], anchor: "east")
+    content("x4", [4: $(n'-1,m'-1,n)$], anchor: "east")
     content((l, 0, 0), $n'$, anchor: "west")
     content((0, l, 0), $m'$, anchor: "west")
     content((0, 0, l), $m = n$, anchor: "west")
@@ -122,7 +124,7 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
   import cetz.draw: *
   let l = 2.8
   let k = l - 0.4
-  ortho(x: 15deg, y: -30deg, z: 0deg, {
+  ortho(x: 18deg, y: -30deg, z: 0deg, {
     line((0, 0, 0), (0, 0, l), mark: (end: ">"))
     line((0, -l, 0), (0, l, 0), mark: (end: ">"))
     line((0, 0, 0), (l, 0, 0), mark: (end: ">"))
@@ -134,6 +136,8 @@ Calculated: $efc^(m',m)_(n',n)$ for $abs(m') <= n' <= N and m = n <= N$
       line((0, 0), (k, k), (0, k), close: true, fill: gray.transparentize(50%), stroke: none)
       line((0, 0), (k, -k), (0, -k), close: true, fill: gray.transparentize(50%), stroke: none)
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
+      content((k*0.3, -k*0.7), [0])
+      content((k*0.7, -k*0.3), [@init], anchor: "west")
     })
     on-yz({
       grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
