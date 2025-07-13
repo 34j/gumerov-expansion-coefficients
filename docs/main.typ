@@ -85,8 +85,8 @@
 
 #cetz.canvas({
   import cetz.draw: *
-  let l = 2.8
-  let k = l - 0.4
+  let l = 4.8
+  let k = 4
   ortho(
     x: 18deg,
     y: -30deg,
@@ -128,6 +128,22 @@
         content((k * 0.3, -k * 0.7), [0 (@zero)])
         content((k * 0.7, -k * 0.3), [@init], anchor: "west")
       })
+      for i in range(1, k) {
+        on-xy(
+          {
+            line(
+              (0, -0.2),
+              (0, 0.2),
+              (k - i, k - i + 0.2),
+              (k - i, -k + i - 0.2),
+              close: true,
+              fill: blue.transparentize(50%),
+              stroke: none,
+            )
+          },
+          z: i,
+        )
+      }
       on-yz({
         grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
       })
@@ -168,8 +184,8 @@
 
 #cetz.canvas({
   import cetz.draw: *
-  let l = 2.8
-  let k = l - 0.4
+  let l = 4.8
+  let k = 4
   ortho(
     x: 18deg,
     y: -30deg,
@@ -211,6 +227,22 @@
         content((k * 0.3, -k * 0.7), [0 (@zero)])
         content((k * 0.7, -k * 0.3), [@init], anchor: "west")
       })
+      for i in range(1, k) {
+        on-xy(
+          {
+            line(
+              (0, -0.2),
+              (0, 0.2),
+              (k - i, k - i + 0.2),
+              (k - i, -k + i - 0.2),
+              close: true,
+              fill: blue.transparentize(50%),
+              stroke: none,
+            )
+          },
+          z: i,
+        )
+      }
       on-yz({
         grid((0, -l), (l, l), step: 1.0, stroke: gray + 0.2pt)
       })
@@ -336,10 +368,13 @@ $abs(m') < m$
 Rotation is not related to Helmholtz equation.
 
 $
-  T^(m' m)_n (Q) := ip(Y^m_n (theta, phi), Y^m'_n (theta', phi'))
+  T^(m' m)_n (Q) := ip(Y^m_n (theta, phi), Y^m'_n (hat(theta), hat(phi)))
 $
 $
-  Q: SS^2 -> SS^2, (theta, phi) |-> (theta', phi')
+  Q: SS^2 -> SS^2, (theta, phi) |-> (hat(theta), hat(phi))
+$
+$
+  (theta, phi) := Q(0, 0)
 $
 
 $
@@ -350,4 +385,7 @@ $
   $
     T^(m' 0)_n = sqrt((4 pi)/(2 n + 1)) Y^(-m')_n (theta', phi')
   $
+]
+#theorem[
+
 ]
