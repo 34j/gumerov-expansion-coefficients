@@ -109,7 +109,7 @@ def test_main(xp: ArrayNamespaceFull) -> None:
     r = xp.asarray(7.3484693)
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
-    n_end = 3
+    n_end = 5
     coefs = translational_coefficients(
         k * r,
         theta,
@@ -118,3 +118,4 @@ def test_main(xp: ArrayNamespaceFull) -> None:
         n_end,
     )
     assert coefs[idx_i(1, 0), idx_i(1, 0)] == pytest.approx(-0.01254681 + 0.0j)
+    assert coefs[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
