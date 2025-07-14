@@ -274,3 +274,47 @@ def translational_coefficients_all(
                 translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd,
             )
     return result
+
+
+def translational_coefficients(
+    kr: Array, theta: Array, phi: Array, same: bool, n_end: int, /
+) -> Array:
+    """Initial values of sectorial translational coefficients (E|F)^{m',m}_{0, 0}
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    same : bool
+        If True, return (R|R) = (S|S).
+        If False, return (S|R).
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
+    """
+    xp = array_namespace(kr, theta, phi)
+    translational_coefficients_sectorial_init_ = translational_coefficients_sectorial_init(
+        kr, theta, phi, same, n_end
+    )
+    translational_coefficients_sectorial_m_n = translational_coefficients_sectorial(
+        n_end=n_end,
+        translational_coefficients_sectorial_init=translational_coefficients_sectorial_init_,
+    )
+    n = xp.arange(n_end)[:, None]
+    nd = idx_all(n_end, xp=xp)[0][None, :]
+    translational_coefficients_sectorial_md_nd = (
+        minus_1_power(n + nd) * translational_coefficients_sectorial_m_n.T
+    )
+    return translational_coefficients_all(
+        n_end=n_end,
+        translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n,
+        translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd,
+    )
