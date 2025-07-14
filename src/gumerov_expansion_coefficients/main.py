@@ -82,7 +82,7 @@ def b(n: Array | int, m: Array | int, /) -> Array:
     return xp.where(
         m_abs > n,
         0,
-        xp.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1))) * xp.sign(n),
+        xp.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1))) * xp.sign(m),
     )
 
 
