@@ -68,3 +68,4 @@ def test_sectorial(xp: ArrayNamespaceFull) -> None:
         translational_coefficients_sectorial_init=init,
     )
     assert sectorial[idx_i(2, 1), 0] == pytest.approx(-0.01413437 - 0.04947031j)
+    assert sectorial[idx_i(2, 1), 1] == pytest.approx(-0.00290188 + 0.0j)
