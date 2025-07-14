@@ -207,34 +207,36 @@ def translational_coefficients_iter(
     mlarger = max(mabs, mdabs)
     sized = 2 * n_end - mdabs - mlarger - 1
     size = 2 * n_end - mabs - mlarger - 1
-    n_iter = n_end - mlarger  # [nd, n]
+    n_iter = n_end - mlarger - 1  # [nd, n]
     md_m_fixed = xp.zeros((sized, size), dtype=dtype, device=device)
     md_m_fixed[:, 0] = translational_coefficients_sectorial_m_n[
-        idx(xp.arange(mdabs, 2 * n_end - mlarger, device=device, dtype=xp.int32), md), m
+        idx(xp.arange(mdabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32), md), m
     ]
     md_m_fixed[0, :] = translational_coefficients_sectorial_md_nd[
-        md, idx(xp.arange(mabs, 2 * n_end - mlarger, device=device, dtype=xp.int32), m)
+        md, idx(xp.arange(mabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32), m)
     ]
     # batch for nd, grow n
-    mabss = (
+    ms = (
         (mabs, mdabs),
         (mdabs, mabs),
     )
-    del mabs, mdabs
-    for m1abs, m2abs in mabss:
+    # del mabs, mdabs, m, md
+    for m1, m2 in ms:
+        md_m_fixed = xp.moveaxis(md_m_fixed, 0, 1)
+        m1abs = abs(m1)
+        m2abs = abs(m2)
         for i in range(n_iter):
             # 4.26, 2nd term is the result
-            n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 1)
+            n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 2)
             n1f = xp.arange(n1.start, n1.stop, dtype=dtype, device=device)
-            n2 = i + m2abs
+            n2 = xp.asarray(i + m2abs)
             md_m_n2_fixed = (
-                -a(n1f, md) * md_m_fixed[i + 2 : -i, i]  # 3rd
-                + a(n1f - 1, md) * md_m_fixed[i : -i - 2, i]  # 4th
+                -a(n1f, m1) * md_m_fixed[i + 2 : None if i == 0 else -i, i]  # 3rd
+                + a(n1f - 1, m1) * md_m_fixed[i : -i - 2, i]  # 4th
             )
             if i > 0:
-                md_m_n2_fixed += a(n2 - 1, m) * md_m_fixed[i + 1 : -i - 1, i - 1]  # 1st
-            md_m_fixed[i + 1 : -i - 1, i + 1] = md_m_n2_fixed / a(n2, m)
-        md_m_fixed = xp.moveaxis(md_m_fixed, 0, 1)
+                md_m_n2_fixed += a(n2 - 1, m2) * md_m_fixed[i + 1 : -i - 1, i - 1]  # 1st
+            md_m_fixed[i + 1 : -i - 1, i + 1] = md_m_n2_fixed / a(n2, m2)
     return md_m_fixed[: n_end - abs(md), : n_end - abs(m)]
 
 
@@ -312,8 +314,9 @@ def translational_coefficients(
         n_end=n_end,
         translational_coefficients_sectorial_init=translational_coefficients_sectorial_init_,
     )
-    n = xp.arange(n_end)[:, None]
-    nd = idx_all(n_end, xp=xp)[0][None, :]
+    m = xp.arange(-2 * n_end + 1, 2 * n_end, dtype=xp.int32, device=kr.device)[:, None]
+    n = xp.abs(m)
+    nd = idx_all(2 * n_end - 1, xp=xp)[0][None, :]
     # 4.61
     translational_coefficients_sectorial_md_nd = (
         minus_1_power(n + nd) * translational_coefficients_sectorial_m_n.T
