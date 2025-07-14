@@ -4,10 +4,13 @@ from typing import ParamSpec, TypeVar
 
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace
+from array_api_jit import jit as jit_raw
 from scipy.special import sph_harm_y, spherical_jn, spherical_yn
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+jit = jit_raw()
 
 
 # (2.14)
@@ -39,6 +42,7 @@ def idx_i(n: int, m: int, /) -> int:
     return n * (n + 1) + m
 
 
+@jit
 def idx(n: Array | int, m: Array | int, /) -> Array:
     """Index for the coefficients."""
     # (0, 0) -> 0
@@ -51,6 +55,7 @@ def idx(n: Array | int, m: Array | int, /) -> Array:
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
 
+@jit
 def idx_all(n_end: int, /, xp: ArrayNamespace) -> tuple[Array, Array]:
     n = xp.arange(n_end, dtype=xp.int32)[:, None]
     m = xp.arange(-n_end + 1, n_end, dtype=xp.int32)[None, :]
@@ -59,15 +64,18 @@ def idx_all(n_end: int, /, xp: ArrayNamespace) -> tuple[Array, Array]:
     return n[mask], m[mask]
 
 
+@jit
 def ndim_harm(n_end: int, /) -> int:
     """Number of spherical harmonics which degree is less than n_end."""
     return n_end**2
 
 
+@jit
 def minus_1_power(x: Array, /) -> Array:
     return 1 - 2 * (x % 2)
 
 
+@jit
 def a(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
     n = xp.asarray(n)
@@ -80,6 +88,7 @@ def a(n: Array | int, m: Array | int, /) -> Array:
     )
 
 
+@jit
 def b(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
@@ -140,6 +149,7 @@ def translational_coefficients_sectorial_init(
         return minus_1_power(n) * xp.sqrt(xp.asarray(4.0) * xp.pi) * R(n, -m, kr, theta, phi)
 
 
+@jit
 def translational_coefficients_sectorial_n_m(
     *,
     n_end: int,
@@ -195,6 +205,7 @@ def translational_coefficients_sectorial_n_m(
     return result
 
 
+@jit
 def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
     """
     Flip a symmetric array.
@@ -241,6 +252,7 @@ def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
     return xp.concat([zero, xp.flip(nonzero, axis=axis)], axis=axis)
 
 
+@jit
 def translational_coefficients_sectorial_nd_md(
     *,
     n_end: int,
@@ -282,6 +294,7 @@ def translational_coefficients_sectorial_nd_md(
     )
 
 
+@jit
 def translational_coefficients_iter(
     *,
     m: int,
@@ -334,6 +347,7 @@ def translational_coefficients_iter(
     return md_m_fixed[..., : n_end - abs(md), : n_end - abs(m)]
 
 
+@jit
 def translational_coefficients_all(
     *,
     n_end: int,

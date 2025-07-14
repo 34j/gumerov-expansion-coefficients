@@ -87,6 +87,35 @@ wheels = [
 ]
 
 [[package]]
+name = "array-api-jit"
+version = "0.0.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/6f/2adb03b9b1b5bfcba02b310f8770ba0d38c43b0ce460bac7c3247c1488ec/array_api_jit-0.0.0.tar.gz", hash = "sha256:2b43af32575a900fc7feae14a6b8fb595fd53fe18ad685f5777a86a6c4595ffa", size = 4762, upload-time = "2025-07-11T12:39:36.234Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/f1/e1a2bb5d609f9fd80a41a123a179bdbfa03da5d9395d1a3fd815c1092c31/array_api_jit-0.0.0-py3-none-any.whl", hash = "sha256:8669649dd2cd152b884809811fc9e9e92750ec741584473bc98ae180c4b6ebcc", size = 3813, upload-time = "2025-07-11T12:39:34.908Z" },
+]
+
+[[package]]
+name = "array-api-jit"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+]
+dependencies = [
+    { name = "array-api-compat", version = "1.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e7/95/5bddfb7e45188c8e3ad8a1c7ebfae0f5f230cbf26539d171a63bd728e9ae/array_api_jit-1.0.0.tar.gz", hash = "sha256:a896153e17357f87c31f3fe24303917efe5ade8d61d901760fb12faf40889e93", size = 8956, upload-time = "2025-07-14T01:22:35.26Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8f/da/7dda387073f2044e7e35327cbd89c77ae8e1546d85914a1058b5ca371d23/array_api_jit-1.0.0-py3-none-any.whl", hash = "sha256:a60dddcae6ed7f523b0d3cfcbfe3a850d75ec02f07c99ca96869e0ff27027ce9", size = 5893, upload-time = "2025-07-14T01:22:33.759Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -621,6 +650,8 @@ dependencies = [
     { name = "array-api-compat", version = "1.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "array-api-extra", version = "0.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "array-api-extra", version = "0.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+    { name = "array-api-jit", version = "0.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "array-api-jit", version = "1.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "frozendict" },
     { name = "numba", version = "0.60.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "numba", version = "0.61.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -654,6 +685,7 @@ docs = [
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
+    { name = "array-api-jit", specifier = ">=0.0.0" },
     { name = "frozendict", specifier = ">=2.4.6" },
     { name = "numba", specifier = ">=0.60.0" },
     { name = "rich", specifier = ">=10" },
