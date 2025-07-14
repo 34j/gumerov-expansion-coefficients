@@ -8,8 +8,8 @@ from gumerov_expansion_coefficients.main import (
     minus_1_power,
     ndim_harm,
     translational_coefficients,
-    translational_coefficients_sectorial,
     translational_coefficients_sectorial_init,
+    translational_coefficients_sectorial_n_m,
 )
 
 
@@ -64,7 +64,7 @@ def test_sectorial(xp: ArrayNamespaceFull) -> None:
     phi = xp.asarray(-1.2924967)
     n_end = 3
     init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
-    sectorial = translational_coefficients_sectorial(
+    sectorial = translational_coefficients_sectorial_n_m(
         n_end=n_end,
         translational_coefficients_sectorial_init=init,
     )
