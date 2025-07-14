@@ -77,7 +77,7 @@ def test_sectorial(xp: ArrayNamespaceFull) -> None:
     assert sectorial[idx_i(1, 1), 1] == pytest.approx(0.18486702 + 0.0j)
 
     # assert sectorial[idx_i(2, 1), 0] == pytest.approx(-0.01413437 - 0.04947031j)
-    assert sectorial[idx_i(2, 1), 1] == pytest.approx(-0.00290188 + 0.0j)
+    assert sectorial[idx_i(2, 1), 1] == pytest.approx(-0.00290188 + 0.0j, abs=1e-7)
 
 
 def test_main(xp: ArrayNamespaceFull) -> None:

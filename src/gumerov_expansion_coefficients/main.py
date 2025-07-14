@@ -79,10 +79,11 @@ def a(n: Array | int, m: Array | int, /) -> Array:
 def b(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
+    print(n, m)
     return xp.where(
         m_abs > n,
         0,
-        xp.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1))) * xp.sign(m),
+        xp.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1))) * xp.where(m >= 0, 1, -1),
     )
 
 
@@ -167,6 +168,7 @@ def translational_coefficients_sectorial(
         print(idx(nd - 1, md - 1), idx(nd + 1, md - 1), idx(nd, md), (nd, md))
         print(getitem_outer_zero(result, (idx(nd - 1, md - 1), m)))
         print(getitem_outer_zero(result, (idx(nd + 1, md - 1), m)))
+        print(b(nd, -md), b(nd + 1, md - 1))
         result[idx(nd, md), m + 1] = (
             1
             / b(xp.asarray(m + 1), xp.asarray(-m - 1))
