@@ -160,12 +160,12 @@ def translational_coefficients_sectorial(
     Returns
     -------
     Array
-        Sectorial translational coefficients of shape (ndim_harm(n_end), 2*n_end-1)
+        Sectorial translational coefficients [(m',n'),m] of shape (ndim_harm(n_end), 2*n_end-1).
+        While the array shape is redundant, we give up further optimization
+        because the batched axis in calculation (first) and used axis (last) are different.
     """
     xp = array_namespace(kr, theta, phi)
-    result = xp.zeros(
-        (ndim_harm(2 * n_end), 2 * n_end - 1), dtype=kr.dtype, device=kr.device
-    )
+    result = xp.zeros((ndim_harm(2 * n_end), 2 * n_end - 1), dtype=kr.dtype, device=kr.device)
     result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
     for m in range(n_end):
@@ -175,8 +175,7 @@ def translational_coefficients_sectorial(
             / b(m + 1, -m - 1)
             * (
                 b(nd, -md) * getitem_outer_zero(result, (idx(nd - 1, md - 1), m))
-                - b(nd + 1, md - 1)
-                * getitem_outer_zero(result, (idx(nd + 1, md - 1), m))
+                - b(nd + 1, md - 1) * getitem_outer_zero(result, (idx(nd + 1, md - 1), m))
             )
         )
     # 4.68
@@ -188,8 +187,53 @@ def translational_coefficients_sectorial(
             / b(m + 1, -m - 1)
             * (
                 b(nd, md) * getitem_outer_zero(result, (idx(nd - 1, md + 1), -m))
-                - b(nd + 1, -md - 1)
-                * getitem_outer_zero(result, (idx(nd + 1, md + 1), -m))
+                - b(nd + 1, -md - 1) * getitem_outer_zero(result, (idx(nd + 1, md + 1), -m))
             )
         )
+    return result
+
+
+def translational_coefficients_all(
+    kr: Array,
+    theta: Array,
+    phi: Array,
+    n_end: int,
+    /,
+    *,
+    translational_coefficients_sectorial: Array,
+) -> Array:
+    """Translational coefficients (E|F)^{m',m}_{n',n'}
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    n_end : int
+        Maximum degree of spherical harmonics.
+    translational_coefficients_sectorial : Array
+        Sectorial translational coefficients [(m',n'),m] of shape (ndim_harm(n_end), 2*n_end-1)
+
+    Returns
+    -------
+    Array
+        Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
+    """
+    xp = array_namespace(kr, theta, phi)
+    result = xp.zeros((ndim_harm(n_end), ndim_harm(n_end)), dtype=kr.dtype, device=kr.device)
+    for m in range(-n_end + 1, n_end):
+        for md in range(-n_end + 1, n_end):
+            mabs = xp.abs(m)
+            mdabs = xp.abs(md)
+            mlarger = max(mabs, mdabs)
+            sized = 2 * n_end - mdabs - mlarger - 1
+            size = 2 * n_end - mabs - mlarger - 1
+            n_iter = n_end - mlarger
+            tmp = xp.zeros((sized, size), dtype=kr.dtype, device=kr.device)
+            tmp[0, :] = translational_coefficients_sectorial[idx(n_end - 1, m), :]
+            for i in range(n_iter):
+                tmp[i:-i, i] = 0
     return result
