@@ -50,3 +50,4 @@ def test_init(xp: ArrayNamespaceFull) -> None:
     theta = xp.asarray(1.43429)
     init = translational_coefficients_sectorial_init(k * r, theta, phi, True, 4)
     assert init[idx_i(2, 1)] == pytest.approx(-0.01413437 - 0.04947031j)
+    assert init[idx_i(3, 2)] == pytest.approx(-0.01853696 + 0.01153411j)
