@@ -4,7 +4,7 @@ from typing import ParamSpec, TypeVar
 
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace
-from scipy.special import sph_harm, spherical_jn, spherical_yn
+from scipy.special import sph_harm_y, spherical_jn, spherical_yn
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -13,12 +13,14 @@ T = TypeVar("T")
 # (2.14)
 def R(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Regular elementary solution of 3D Helmholtz equation."""
-    return spherical_jn(n, kr) * sph_harm(n, m, theta, phi)
+    xp = array_namespace(n, m, kr, theta, phi)
+    return xp.asarray(spherical_jn(n, kr) * sph_harm_y(n, m, theta, phi))
 
 
 def S(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Singular elementary solution of 3D Helmholtz equation."""
-    return spherical_yn(n, kr) * sph_harm(n, m, theta, phi)
+    xp = array_namespace(n, m, kr, theta, phi)
+    return xp.asarray(spherical_yn(n, kr) * sph_harm_y(n, m, theta, phi))
 
 
 # Gumerov's notation
@@ -48,9 +50,9 @@ def idx(n: Array | int, m: Array | int, /) -> Array:
 
 
 def idx_all(n_end: int, /, xp: ArrayNamespace) -> tuple[Array, Array]:
-    n = xp.arange(n_end, dtype=xp.int32)
-    m = xp.arange(-n_end + 1, n_end, dtype=xp.int32)
-    n, m = xp.meshgrid(n, m, indexing="ij")
+    n = xp.arange(n_end, dtype=xp.int32)[:, None]
+    m = xp.arange(-n_end + 1, n_end, dtype=xp.int32)[None, :]
+    n, m = xp.broadcast_arrays(n, m)
     mask = n >= xp.abs(m)
     return n[mask], m[mask]
 
@@ -127,10 +129,10 @@ def translational_coefficients_sectorial_init(
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
     if not same:
         # 4.43
-        return minus_1_power(n) * xp.sqrt(4 * xp.pi) * S(n, -m, kr, theta, phi)
+        return minus_1_power(n) * xp.sqrt(xp.asarray(4.0) * xp.pi) * S(n, -m, kr, theta, phi)
     else:
         # 4.58
-        return minus_1_power(n) * xp.sqrt(4 * xp.pi) * R(n, -m, kr, theta, phi)
+        return minus_1_power(n) * xp.sqrt(xp.asarray(4.0) * xp.pi) * R(n, -m, kr, theta, phi)
 
 
 def translational_coefficients_sectorial(

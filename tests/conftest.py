@@ -9,9 +9,9 @@ def xp(request: pytest.FixtureRequest) -> ArrayNamespaceFull:
     """
     backend = request.param
     if backend == "numpy":
-        import numpy as xp
+        import array_api_compat.numpy as xp
     elif backend == "torch":
-        import torch as xp
+        import array_api_compat.torch as xp
     else:
         raise ValueError(f"Unknown backend: {backend}")
     return xp
