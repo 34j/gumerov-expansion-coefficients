@@ -37,7 +37,7 @@ def idx_i(n: int, m: int, /) -> int:
     return n * (n + 1) + m
 
 
-def idx(n: Array, m: Array, /) -> Array:
+def idx(n: Array | int, m: Array | int, /) -> Array:
     """Index for the coefficients."""
     # (0, 0) -> 0
     # (1, -1) -> 1
@@ -134,24 +134,14 @@ def translational_coefficients_sectorial_init(
 
 
 def translational_coefficients_sectorial(
-    kr: Array,
-    theta: Array,
-    phi: Array,
-    n_end: int,
-    /,
     *,
+    n_end: int,
     translational_coefficients_sectorial_init: Array,
 ) -> Array:
     """Sectorial translational coefficients (E|F)^{m',m}_{n',|m|}
 
     Parameters
     ----------
-    kr : Array
-        k * r of shape (...,)
-    theta : Array
-        polar angle of shape (...,)
-    phi : Array
-        azimuthal angle of shape (...,)
     n_end : int
         Maximum degree of spherical harmonics.
     translational_coefficients_sectorial_init : Array
@@ -164,8 +154,10 @@ def translational_coefficients_sectorial(
         While the array shape is redundant, we give up further optimization
         because the batched axis in calculation (first) and used axis (last) are different.
     """
-    xp = array_namespace(kr, theta, phi)
-    result = xp.zeros((ndim_harm(2 * n_end), 2 * n_end - 1), dtype=kr.dtype, device=kr.device)
+    xp = array_namespace(translational_coefficients_sectorial_init)
+    dtype = translational_coefficients_sectorial_init.dtype
+    device = translational_coefficients_sectorial_init.device
+    result = xp.zeros((ndim_harm(2 * n_end), 2 * n_end - 1), dtype=dtype, device=device)
     result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
     for m in range(n_end):
@@ -193,59 +185,92 @@ def translational_coefficients_sectorial(
     return result
 
 
-def translational_coefficients_all(
-    kr: Array,
-    theta: Array,
-    phi: Array,
-    n_end: int,
-    /,
+def translational_coefficients_iter(
     *,
-    translational_coefficients_sectorial: Array,
+    m: int,
+    md: int,
+    n_end: int,
+    translational_coefficients_sectorial_m_n: Array,
+    translational_coefficients_sectorial_md_nd: Array,
+) -> Array:
+    xp = array_namespace(
+        translational_coefficients_sectorial_m_n, translational_coefficients_sectorial_md_nd
+    )
+    dtype = translational_coefficients_sectorial_m_n.dtype
+    device = translational_coefficients_sectorial_m_n.device
+    mabs = abs(m)
+    mdabs = abs(md)
+    mlarger = max(mabs, mdabs)
+    sized = 2 * n_end - mdabs - mlarger - 1
+    size = 2 * n_end - mabs - mlarger - 1
+    n_iter = n_end - mlarger  # [nd, n]
+    md_m_fixed = xp.zeros((sized, size), dtype=dtype, device=device)
+    md_m_fixed[:, 0] = translational_coefficients_sectorial_m_n[idx(xp.arange(n_end), md), m]
+    md_m_fixed[0, :] = translational_coefficients_sectorial_md_nd[md, idx(xp.arange(n_end), m)]
+    # batch for nd, grow n
+    mabss = (
+        (mabs, mdabs),
+        (mdabs, mabs),
+    )
+    del mabs, mdabs
+    for m1abs, m2abs in mabss:
+        for i in range(n_iter):
+            # 4.26, 2nd term is the result
+            n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 1)
+            n1i = xp.arange(n1.start, n1.stop, dtype=xp.int32)
+            n2 = i + m2abs
+            md_m_n2_fixed = (
+                -a(n1i, md) * md_m_fixed[i + 2 : -i, i]  # 3rd
+                + a(n1i - 1, md) * md_m_fixed[i : -i - 2, i]  # 4th
+            )
+            if i > 0:
+                md_m_n2_fixed += a(n2 - 1, m) * md_m_fixed[i + 1 : -i - 1, i - 1]  # 1st
+            md_m_fixed[i + 1 : -i - 1, i + 1] = md_m_n2_fixed / a(n2, m)
+        md_m_fixed = xp.moveaxis(md_m_fixed, 0, 1)
+    return md_m_fixed[: n_end - abs(md), : n_end - abs(m)]
+
+
+def translational_coefficients_all(
+    *,
+    n_end: int,
+    translational_coefficients_sectorial_m_n: Array,
+    translational_coefficients_sectorial_md_nd: Array,
 ) -> Array:
     """Translational coefficients (E|F)^{m',m}_{n',n'}
 
     Parameters
     ----------
-    kr : Array
-        k * r of shape (...,)
-    theta : Array
-        polar angle of shape (...,)
-    phi : Array
-        azimuthal angle of shape (...,)
     n_end : int
         Maximum degree of spherical harmonics.
-    translational_coefficients_sectorial : Array
+    translational_coefficients_sectorial_m_n : Array
         Sectorial translational coefficients [(m',n'),m] of shape (ndim_harm(n_end), 2*n_end-1)
+    translational_coefficients_sectorial_md_nd : Array
+        Sectorial translational coefficients [m',(m,n)] of shape (2*n_end-1, ndim_harm(n_end))
 
     Returns
     -------
     Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
-    xp = array_namespace(kr, theta, phi)
-    result = xp.zeros((ndim_harm(n_end), ndim_harm(n_end)), dtype=kr.dtype, device=kr.device)
+    xp = array_namespace(
+        translational_coefficients_sectorial_m_n, translational_coefficients_sectorial_md_nd
+    )
+    dtype = translational_coefficients_sectorial_m_n.dtype
+    device = translational_coefficients_sectorial_m_n.device
+    result = xp.zeros((ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
     for m in range(-n_end + 1, n_end):
         for md in range(-n_end + 1, n_end):
-            mabs = abs(m)
-            mdabs = abs(md)
-            mlarger = max(mabs, mdabs)
-            sized = 2 * n_end - mdabs - mlarger - 1
-            size = 2 * n_end - mabs - mlarger - 1
-            n_iter = n_end - mlarger
-            # [nd, n]
-            tmp = xp.zeros((sized, size), dtype=kr.dtype, device=kr.device)
-            # batch for nd, grow n
-            tmp[0, :] = translational_coefficients_sectorial[idx(n_end - 1, m), :]
-            for i in range(n_iter):
-                # 4.26, 2nd term is the result
-                nd = slice(mdabs + i + 1, 2 * n_end - mlarger - i - 1)
-                ndi = xp.arange(nd.start, nd.stop, dtype=xp.int32)
-                n = i + mabs
-                tmpl = (
-                    -a(ndi, md) / a(n, m) * tmp[i + 2 : -i, i]  # 3rd
-                    + a(ndi - 1, md) / a(n, m) * tmp[i : -i - 2, i]  # 4th
-                )
-                if i > 0:
-                    tmpl += a(n - 1, m) / a(n, m) * tmp[i + 1 : -i - 1, i - 1]  # 1st
-                tmp[i + 1 : -i - 1, i + 1] = tmpl
+            n = xp.arange(abs(m), n_end, dtype=xp.int32)[None, :]
+            nd = xp.arange(abs(md), n_end, dtype=xp.int32)[:, None]
+            result[idx(nd, md), idx(n, m)] = translational_coefficients_iter(
+                m=m,
+                md=md,
+                n_end=n_end,
+                translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n[
+                    idx(xp.arange(n_end), md), m
+                ],
+                translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd[
+                    md, idx(xp.arange(n_end), m)
+                ],
+            )
     return result
