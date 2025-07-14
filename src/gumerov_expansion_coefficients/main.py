@@ -310,6 +310,7 @@ def translational_coefficients(
     )
     n = xp.arange(n_end)[:, None]
     nd = idx_all(n_end, xp=xp)[0][None, :]
+    # 4.61
     translational_coefficients_sectorial_md_nd = (
         minus_1_power(n + nd) * translational_coefficients_sectorial_m_n.T
     )
