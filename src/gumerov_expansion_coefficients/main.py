@@ -26,12 +26,24 @@ def S(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
 # (E|F)^{m' m}_{,n} := (E|F)^{m' m}_{|m'| n}
 
 
-def idx(n: Array | int, m: Array | int, /) -> Array:
+def idx_i(n: int, m: int, /) -> int:
     """Index for the coefficients."""
     # (0, 0) -> 0
     # (1, -1) -> 1
     # (1, 0) -> 2
+    if abs(m) > n:
+        return -1
     return n * (n + 1) + m
+
+
+def idx(n: Array, m: Array, /) -> Array:
+    """Index for the coefficients."""
+    # (0, 0) -> 0
+    # (1, -1) -> 1
+    # (1, 0) -> 2
+    xp = array_namespace(n, m)
+    m_abs = xp.abs(m)
+    return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
 
 def idx_all(n_end: int, /, xp: ArrayNamespace) -> tuple[Array, Array]:
@@ -63,27 +75,108 @@ def a(n: Array, m: Array, /) -> Array:
 
 def b(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
+    m_abs = xp.abs(m)
     return xp.where(
-        xp.abs(m) > n,
+        m_abs > n,
         0,
         xp.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1))) * xp.sign(n),
     )
 
 
-def translational_coefficients(
+def translational_coefficients_sectorial_init(
     kr: Array, theta: Array, phi: Array, same: bool, n_end: int, /
 ) -> Array:
+    """Initial values of sectorial translational coefficients (E|F)^{m',m}_{0, 0}
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    same : bool
+        If True, return (R|R) = (S|S).
+        If False, return (S|R).
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
+    """
     xp = array_namespace(kr, theta, phi)
-    result = xp.zeros(
-        (ndim_harm(n_end), ndim_harm(n_end)), dtype=kr.dtype, device=kr.device
-    )
     n, m = idx_all(n_end, xp=xp)
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
     if not same:
         # 4.43
-        result[:, idx(0, 0)] = xp.sqrt(4 * xp.pi) * S(n, -m, -kr, theta, phi)
+        return minus_1_power(n) * xp.sqrt(4 * xp.pi) * S(n, -m, kr, theta, phi)
     else:
         # 4.58
-        result[:, idx(0, 0)] = xp.sqrt(4 * xp.pi) * R(n, -m, kr, theta, phi)
+        return minus_1_power(n) * xp.sqrt(4 * xp.pi) * R(n, -m, kr, theta, phi)
+
+
+def translational_coefficients_sectorial(
+    kr: Array,
+    theta: Array,
+    phi: Array,
+    same: bool,
+    n_end: int,
+    /,
+    *,
+    translational_coefficients_sectorial_init: Array,
+) -> Array:
+    """Sectorial translational coefficients (E|F)^{m',m}_{n',|m|}
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    same : bool
+        If True, return (R|R) = (S|S).
+        If False, return (S|R).
+    n_end : int
+        Maximum degree of spherical harmonics.
+    translational_coefficients_sectorial_init : Array
+        Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
+
+    Returns
+    -------
+    Array
+        Sectorial translational coefficients of shape (ndim_harm(n_end), 2*n_end-1)
+    """
+    xp = array_namespace(kr, theta, phi)
+    result = xp.zeros(
+        (ndim_harm(2 * n_end), 2 * n_end - 1), dtype=kr.dtype, device=kr.device
+    )
+    result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
-    # result
+    for m in range(n_end):
+        nd, md = idx_all(n_end, xp=xp)
+        result[idx(nd, md), m + 1] = (
+            1
+            / b(m + 1, -m - 1)
+            * (
+                b(nd, -md) * result[idx(nd - 1, md - 1), m]
+                - b(nd + 1, md - 1) * result[idx(nd + 1, md - 1), m]
+            )
+        )
+    # 4.68
+    for m in range(n_end):
+        m = -m
+        nd, md = idx_all(n_end, xp=xp)
+        result[idx(nd, md), -m - 1] = (
+            1
+            / b(m + 1, -m - 1)
+            * (
+                b(nd, md) * result[idx(nd - 1, md + 1), -m]
+                - b(nd + 1, -md - 1) * result[idx(nd + 1, md + 1), -m]
+            )
+        )
+    return result
