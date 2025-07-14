@@ -45,6 +45,8 @@ def idx(n: Array | int, m: Array | int, /) -> Array:
     # (1, -1) -> 1
     # (1, 0) -> 2
     xp = array_namespace(n, m)
+    n = xp.asarray(n)
+    m = xp.asarray(m)
     m_abs = xp.abs(m)
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
@@ -68,6 +70,8 @@ def minus_1_power(x: Array, /) -> Array:
 
 def a(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
+    n = xp.asarray(n)
+    m = xp.asarray(m)
     m_abs = xp.abs(m)
     return xp.where(
         m_abs > n,
@@ -309,7 +313,7 @@ def translational_coefficients_iter(
         for i in range(n_iter):
             # 4.26, 2nd term is the result
             n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 2)
-            n1f = xp.arange(n1.start, n1.stop, dtype=dtype, device=device)
+            n1f = xp.arange(n1.start, n1.stop, dtype=xp.float32, device=device)
             n2 = xp.asarray(i + m2abs)
             md_m_n2_fixed = (
                 -a(n1f, m1) * md_m_fixed[i + 2 : (None if i == 0 else -i), i]  # 3rd
@@ -363,7 +367,7 @@ def translational_coefficients_all(
                 translational_coefficients_sectorial_n_m=translational_coefficients_sectorial_m_n[
                     idx(
                         xp.arange(mdabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
-                        xp.asarray(md),
+                        md,
                     ),
                     m,
                 ],
@@ -371,7 +375,7 @@ def translational_coefficients_all(
                     md,
                     idx(
                         xp.arange(mabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
-                        xp.asarray(m),
+                        m,
                     ),
                 ],
             )
