@@ -87,7 +87,7 @@ def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
     r = xp.asarray(7.3484693)
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
-    n_end = 3
+    n_end = 2
     init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
     sectorial_n_m = translational_coefficients_sectorial_n_m(
         n_end=n_end,

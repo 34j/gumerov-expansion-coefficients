@@ -186,6 +186,52 @@ def translational_coefficients_sectorial_n_m(
     return result
 
 
+def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
+    """
+    Flip a symmetric array.
+
+    Parameters
+    ----------
+    input : Array
+        The input array.
+    axis : int, optional
+        The axis to flip, by default 0
+    include_zero_twice : bool, optional
+        If True, the zeroth element is included twice, by default False
+
+    Returns
+    -------
+    Array
+        The flipped array.
+        Forall a < input.shape[axis] result[-a-1] = result[a] = input[a] = input[-a-1]
+
+    """
+    xp = array_namespace(input)
+    if axis < 0:
+        zero = input[(..., slice(0, 1)) + (slice(None),) * (-axis - 1)]
+        nonzero = input[(..., slice(1, None)) + (slice(None),) * (-axis - 1)]
+    else:
+        zero = input[
+            (
+                slice(
+                    None,
+                ),
+            )
+            * axis
+            + (slice(0, 1), ...)
+        ]
+        nonzero = input[
+            (
+                slice(
+                    None,
+                ),
+            )
+            * axis
+            + (slice(1, None), ...)
+        ]
+    return xp.concat([zero, xp.flip(nonzero, axis=axis)], axis=axis)
+
+
 def translational_coefficients_sectorial_nd_md(
     *,
     n_end: int,
@@ -209,11 +255,14 @@ def translational_coefficients_sectorial_nd_md(
     """
     xp = array_namespace(translational_coefficients_sectorial_n_m)
     device = translational_coefficients_sectorial_n_m.device
-    m = xp.arange(-2 * n_end + 1, 2 * n_end, dtype=xp.int32, device=device)[:, None]
+    m = xp.arange(-2 * n_end + 1, 2 * n_end, dtype=xp.int32, device=device)
     n = xp.abs(m)
-    nd = idx_all(2 * n_end - 1, xp=xp)[0][None, :]
+    nd, md = idx_all(2 * n_end - 1, xp=xp)
     # 4.61
-    return minus_1_power(n + nd) * translational_coefficients_sectorial_n_m.T
+    return (
+        minus_1_power(n[:, None] + nd[None, :])
+        * flip_symmetric_array(translational_coefficients_sectorial_n_m.T, axis=0)[:, idx(nd, -md)]
+    )
 
 
 def translational_coefficients_iter(
