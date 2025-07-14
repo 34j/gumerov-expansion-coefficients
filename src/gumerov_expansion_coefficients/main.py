@@ -64,7 +64,7 @@ def minus_1_power(x: Array, /) -> Array:
     return 1 - 2 * (x % 2)
 
 
-def a(n: Array, m: Array, /) -> Array:
+def a(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
     return xp.where(
@@ -74,7 +74,7 @@ def a(n: Array, m: Array, /) -> Array:
     )
 
 
-def b(n: Array, m: Array, /) -> Array:
+def b(n: Array | int, m: Array | int, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
     return xp.where(
@@ -232,8 +232,20 @@ def translational_coefficients_all(
             sized = 2 * n_end - mdabs - mlarger - 1
             size = 2 * n_end - mabs - mlarger - 1
             n_iter = n_end - mlarger
+            # [nd, n]
             tmp = xp.zeros((sized, size), dtype=kr.dtype, device=kr.device)
+            # batch for nd, grow n
             tmp[0, :] = translational_coefficients_sectorial[idx(n_end - 1, m), :]
             for i in range(n_iter):
-                tmp[i:-i, i] = 0
+                # 4.26, 2nd term is the result
+                nd = slice(mdabs + i + 1, 2 * n_end - mlarger - i - 1)
+                ndi = xp.arange(nd.start, nd.stop, dtype=xp.int32)
+                n = i + mabs
+                tmpl = (
+                    -a(ndi, md) / a(n, m) * tmp[i + 2 : -i, i]  # 3rd
+                    + a(ndi - 1, md) / a(n, m) * tmp[i : -i - 2, i]  # 4th
+                )
+                if i > 0:
+                    tmpl += a(n - 1, m) / a(n, m) * tmp[i + 1 : -i - 1, i - 1]  # 1st
+                tmp[i + 1 : -i - 1, i + 1] = tmpl
     return result
