@@ -99,7 +99,7 @@ def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
         n_end=n_end,
         translational_coefficients_sectorial_n_m=sectorial_n_m,
     )
-
+    assert sectorial_nd_md[1, idx_i(1, 0)] == sectorial_n_m[idx_i(1, 0), -1]
     assert sectorial_nd_md[1, idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
 
 

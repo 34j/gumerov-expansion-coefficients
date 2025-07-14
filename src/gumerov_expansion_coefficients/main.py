@@ -255,7 +255,13 @@ def translational_coefficients_sectorial_nd_md(
     """
     xp = array_namespace(translational_coefficients_sectorial_n_m)
     device = translational_coefficients_sectorial_n_m.device
-    m = xp.arange(-2 * n_end + 1, 2 * n_end, dtype=xp.int32, device=device)
+    m = xp.concat(
+        (
+            xp.arange(2 * n_end, dtype=xp.int32, device=device),
+            xp.arange(-2 * n_end + 1, 0, dtype=xp.int32, device=device),
+        ),
+        axis=0,
+    )
     n = xp.abs(m)
     nd, md = idx_all(2 * n_end - 1, xp=xp)
     # 4.61
