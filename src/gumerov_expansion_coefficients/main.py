@@ -1,4 +1,5 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
+from types import EllipsisType
 from typing import ParamSpec, TypeVar
 
 from array_api._2024_12 import Array, ArrayNamespace
@@ -83,6 +84,20 @@ def b(n: Array, m: Array, /) -> Array:
     )
 
 
+def getitem_outer_zero(
+    array: Array,
+    indices: tuple[int | slice | EllipsisType | Array | None, ...],
+    /,
+    *,
+    axis: int = 0,
+) -> Array:
+    len_axis = array.shape[axis]
+    index_axis = indices[axis]
+    array = array[indices]
+    array[(index_axis < 0) | (index_axis >= len_axis)] = 0  # type: ignore
+    return array
+
+
 def translational_coefficients_sectorial_init(
     kr: Array, theta: Array, phi: Array, same: bool, n_end: int, /
 ) -> Array:
@@ -122,7 +137,6 @@ def translational_coefficients_sectorial(
     kr: Array,
     theta: Array,
     phi: Array,
-    same: bool,
     n_end: int,
     /,
     *,
@@ -138,9 +152,6 @@ def translational_coefficients_sectorial(
         polar angle of shape (...,)
     phi : Array
         azimuthal angle of shape (...,)
-    same : bool
-        If True, return (R|R) = (S|S).
-        If False, return (S|R).
     n_end : int
         Maximum degree of spherical harmonics.
     translational_coefficients_sectorial_init : Array
@@ -163,8 +174,9 @@ def translational_coefficients_sectorial(
             1
             / b(m + 1, -m - 1)
             * (
-                b(nd, -md) * result[idx(nd - 1, md - 1), m]
-                - b(nd + 1, md - 1) * result[idx(nd + 1, md - 1), m]
+                b(nd, -md) * getitem_outer_zero(result, (idx(nd - 1, md - 1), m))
+                - b(nd + 1, md - 1)
+                * getitem_outer_zero(result, (idx(nd + 1, md - 1), m))
             )
         )
     # 4.68
@@ -175,8 +187,9 @@ def translational_coefficients_sectorial(
             1
             / b(m + 1, -m - 1)
             * (
-                b(nd, md) * result[idx(nd - 1, md + 1), -m]
-                - b(nd + 1, -md - 1) * result[idx(nd + 1, md + 1), -m]
+                b(nd, md) * getitem_outer_zero(result, (idx(nd - 1, md + 1), -m))
+                - b(nd + 1, -md - 1)
+                * getitem_outer_zero(result, (idx(nd + 1, md + 1), -m))
             )
         )
     return result
