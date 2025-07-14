@@ -119,3 +119,5 @@ def test_main(xp: ArrayNamespaceFull) -> None:
     )
     assert coefs[idx_i(1, 0), idx_i(1, 0)] == pytest.approx(-0.01254681 + 0.0j)
     assert coefs[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
+    assert coefs[idx_i(2, 1), idx_i(4, -3)] == pytest.approx(-0.10065599 + 0.20439409j)
+    assert coefs[idx_i(2, -1), idx_i(4, -3)] == pytest.approx(0.10999471 - 0.06844115j)
