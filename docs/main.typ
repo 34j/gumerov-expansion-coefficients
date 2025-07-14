@@ -276,9 +276,13 @@
 )[$efc^(m',m)_(n',n)$ for $abs(m') <= n' <= 2 N - n and -m = n <= N$
 ]
 
-#theorem[4.7-9][
+#theorem[4.61-62][
   $
-    efc^(m' m)_(n' n) = (-1)^(n + n') efc^(m m')_(n n')
+    efc^(m' m)_(n' n) = (-1)^(n + n') efc^(-m -m')_(n n')
+  $
+  Especially
+  $
+    efc^(m' m)_(abs(m') n) = (-1)^(n + abs(m')) efc^(-m -m')_(n abs(m'))
   $
 ] <swap>
 
