@@ -1,7 +1,7 @@
 import pytest
 from array_api._2024_12 import ArrayNamespaceFull
 
-from gumerov_expansion_coefficients.main import (
+from gumerov_expansion_coefficients._main import (
     idx,
     idx_all,
     idx_i,

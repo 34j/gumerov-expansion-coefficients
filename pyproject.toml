@@ -43,6 +43,10 @@ urls.repository = "https://github.com/34j/gumerov-expansion-coefficients"
 scripts.gumerov-expansion-coefficients = "gumerov_expansion_coefficients.cli:app"
 
 [dependency-groups]
+cli = [
+    "pandas>=2.3.1",
+    "seaborn>=0.13.2",
+]
 dev = [
   "pytest>=8,<9",
   "pytest-cov>=6,<7",
