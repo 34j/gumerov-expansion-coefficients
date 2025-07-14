@@ -159,11 +159,14 @@ def translational_coefficients_sectorial(
     xp = array_namespace(translational_coefficients_sectorial_init)
     dtype = translational_coefficients_sectorial_init.dtype
     device = translational_coefficients_sectorial_init.device
-    result = xp.zeros((ndim_harm(2 * n_end - 1), 2 * n_end - 1), dtype=dtype, device=device)
+    result = xp.zeros((ndim_harm(2 * n_end - 1), 4 * n_end - 1), dtype=dtype, device=device)
     result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
-    for m in range(n_end - 1):
-        nd, md = idx_all(n_end, xp=xp)
+    for m in range(2 * n_end - 2):
+        nd, md = idx_all(2 * n_end - m - 2, xp=xp)
+        print(idx(nd - 1, md - 1), idx(nd + 1, md - 1), idx(nd, md), (nd, md))
+        print(getitem_outer_zero(result, (idx(nd - 1, md - 1), m)))
+        print(getitem_outer_zero(result, (idx(nd + 1, md - 1), m)))
         result[idx(nd, md), m + 1] = (
             1
             / b(xp.asarray(m + 1), xp.asarray(-m - 1))
@@ -173,7 +176,7 @@ def translational_coefficients_sectorial(
             )
         )
     # 4.68
-    for m in range(n_end - 1):
+    for m in range(2 * n_end - 2):
         nd, md = idx_all(n_end, xp=xp)
         result[idx(nd, md), -m - 1] = (
             1
