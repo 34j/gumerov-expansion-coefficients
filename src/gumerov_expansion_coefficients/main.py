@@ -226,8 +226,8 @@ def translational_coefficients_all(
     result = xp.zeros((ndim_harm(n_end), ndim_harm(n_end)), dtype=kr.dtype, device=kr.device)
     for m in range(-n_end + 1, n_end):
         for md in range(-n_end + 1, n_end):
-            mabs = xp.abs(m)
-            mdabs = xp.abs(md)
+            mabs = abs(m)
+            mdabs = abs(md)
             mlarger = max(mabs, mdabs)
             sized = 2 * n_end - mdabs - mlarger - 1
             size = 2 * n_end - mabs - mlarger - 1
