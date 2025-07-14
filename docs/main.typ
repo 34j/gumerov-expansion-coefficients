@@ -63,7 +63,7 @@
 
 #theorem[4.43, 4.58][
   $
-    efc^(m' 0)_(n' 0) (t) = 1_(abs(m') < n) sqrt(4 pi) (-1)^n cases(R &(E = F),S &(E != F))^(-m')_n' (t)
+    efc^(m',0)_(n',0) (t) = 1_(abs(m') < n) sqrt(4 pi) (-1)^n cases(R &(E = F),S &(E != F))^(-m')_n' (t)
   $
 ] <init>
 
@@ -76,7 +76,7 @@
 
 #theorem[4.30][
   $
-    b^m_n underbrace(efc^(m' m+1)_(n' n-1),m = n ==> 0 "(4.31)") - b^(-m-1)_(n+1) efc^(m' m+1)_(n' n+1) = b^(m'-1)_(n'+1) efc^(m'-1 m)_(n' + 1 n) - b^(-m')_(n') efc^(m'-1 m)_(n' - 1 n)
+    b^m_n underbrace(efc^(m',m+1)_(n',n-1),m = n ==> 0 "(4.31)") - b^(-m-1)_(n+1) efc^(m',m+1)_(n',n+1) = b^(m'-1)_(n'+1) efc^(m'-1,m)_(n' + 1,n) - b^(-m')_(n') efc^(m'-1,m)_(n' - 1,n)
   $
   $
     b^m_n = 1_(abs(m) <= n) underbrace(cases(1 &(m >= 0),-1 &(m < 0)),"Not" sign(m) "!") sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
@@ -175,7 +175,7 @@
 
 #theorem[4.34 (swapped)][
   $
-    b^m'_n' efc^(m'+1 m)_(n'-1 n) - b^(-m'-1)_(n'+1) efc^(m'+1 m)_(n'+1 n) = b^(m-1)_(n+1) efc^(m' m-1)_(n' n+1) - b^(-m)_n underbrace(efc^(m' m-1)_(n' n-1), m = -n ==> 0)
+    b^m'_n' efc^(m'+1 m)_(n'-1,n) - b^(-m'-1)_(n'+1) efc^(m'+1,m)_(n'+1,n) = b^(m-1)_(n+1) efc^(m',m-1)_(n',n+1) - b^(-m)_n underbrace(efc^(m',m-1)_(n',n-1), m = -n ==> 0)
   $
   $
     b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
@@ -278,11 +278,11 @@
 
 #theorem[4.61-62][
   $
-    efc^(m' m)_(n' n) = (-1)^(n + n') efc^(-m -m')_(n n')
+    efc^(m',m)_(n',n) = (-1)^(n + n') efc^(-m,-m')_(n,n')
   $
   Especially
   $
-    efc^(m' m)_(abs(m') n) = (-1)^(n + abs(m')) efc^(-m -m')_(n abs(m'))
+    efc^(m',m)_(abs(m'),n) = (-1)^(n + abs(m')) efc^(-m,-m')_(n,abs(m'))
   $
 ] <swap>
 
@@ -298,7 +298,7 @@
 
 #theorem[4.26][
   $
-    a^m_(n-1) efc^(m' m)_(n' n-1) - a^m_n efc^(m' m)_(n' n+1) = a^m'_n' efc^(m' m)_(n' + 1 n) - a^m'_(n' - 1) efc^(m' m)_(n' - 1 n)
+    a^m_(n-1) efc^(m',m)_(n',n-1) - a^m_n efc^(m',m)_(n',n+1) = a^m'_n' efc^(m',m)_(n' + 1,n) - a^m'_(n' - 1) efc^(m',m)_(n' - 1,n)
   $
   $
     a^m_n = 1_(abs(m) <= n) sqrt(((n + 1 + abs(m)) (n + 1 - abs(m)))/((2n+1)(2n+3)))
@@ -309,7 +309,7 @@
   $m, m'$ are fixed.
 ]
 
-$abs(m') < m$
+// $abs(m') < m$
 
 #cetz.canvas({
   import cetz.draw: *
