@@ -224,6 +224,18 @@ wheels = [
 ]
 
 [[package]]
+name = "cm-time"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fb/db/aef662a01ec5b855f1fa1ca969f5cf6489a2e7c83f38704426bdf8c6c1d9/cm_time-0.1.2.tar.gz", hash = "sha256:e2848efc5868884d0a7795408ec9b2c21d2d3e2cf399241e8e4531a29128b638", size = 7757, upload-time = "2023-03-15T21:45:13.543Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/53/5f/28ac6460fc9c67d4751200fffe56006c465663f7a1672793c6d8482b21e5/cm_time-0.1.2-py3-none-any.whl", hash = "sha256:8dfd172916a7b23f508fbca046157067ab9374fc38791d408278ce7288077cfa", size = 7811, upload-time = "2023-03-15T21:45:12.436Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -623,6 +635,7 @@ dependencies = [
 
 [package.dev-dependencies]
 cli = [
+    { name = "cm-time" },
     { name = "pandas" },
     { name = "seaborn" },
 ]
@@ -652,6 +665,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 cli = [
+    { name = "cm-time", specifier = ">=0.1.2" },
     { name = "pandas", specifier = ">=2.3.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
 ]

@@ -114,8 +114,8 @@ def test_main(xp: ArrayNamespaceFull) -> None:
         k * r,
         theta,
         phi,
-        True,
-        n_end,
+        same=True,
+        n_end=n_end,
     )
     assert coefs[idx_i(1, 0), idx_i(1, 0)] == pytest.approx(-0.01254681 + 0.0j)
     assert coefs[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
