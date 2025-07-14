@@ -205,8 +205,12 @@ def translational_coefficients_iter(
     size = 2 * n_end - mabs - mlarger - 1
     n_iter = n_end - mlarger  # [nd, n]
     md_m_fixed = xp.zeros((sized, size), dtype=dtype, device=device)
-    md_m_fixed[:, 0] = translational_coefficients_sectorial_m_n[idx(xp.arange(n_end), md), m]
-    md_m_fixed[0, :] = translational_coefficients_sectorial_md_nd[md, idx(xp.arange(n_end), m)]
+    md_m_fixed[:, 0] = translational_coefficients_sectorial_m_n[
+        idx(xp.arange(mdabs, 2 * n_end - mlarger, device=device, dtype=xp.int32), md), m
+    ]
+    md_m_fixed[0, :] = translational_coefficients_sectorial_md_nd[
+        md, idx(xp.arange(mabs, 2 * n_end - mlarger, device=device, dtype=xp.int32), m)
+    ]
     # batch for nd, grow n
     mabss = (
         (mabs, mdabs),
@@ -217,11 +221,11 @@ def translational_coefficients_iter(
         for i in range(n_iter):
             # 4.26, 2nd term is the result
             n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 1)
-            n1i = xp.arange(n1.start, n1.stop, dtype=xp.int32)
+            n1f = xp.arange(n1.start, n1.stop, dtype=dtype, device=device)
             n2 = i + m2abs
             md_m_n2_fixed = (
-                -a(n1i, md) * md_m_fixed[i + 2 : -i, i]  # 3rd
-                + a(n1i - 1, md) * md_m_fixed[i : -i - 2, i]  # 4th
+                -a(n1f, md) * md_m_fixed[i + 2 : -i, i]  # 3rd
+                + a(n1f - 1, md) * md_m_fixed[i : -i - 2, i]  # 4th
             )
             if i > 0:
                 md_m_n2_fixed += a(n2 - 1, m) * md_m_fixed[i + 1 : -i - 1, i - 1]  # 1st
@@ -260,17 +264,13 @@ def translational_coefficients_all(
     result = xp.zeros((ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
     for m in range(-n_end + 1, n_end):
         for md in range(-n_end + 1, n_end):
-            n = xp.arange(abs(m), n_end, dtype=xp.int32)[None, :]
-            nd = xp.arange(abs(md), n_end, dtype=xp.int32)[:, None]
+            n = xp.arange(abs(m), n_end, dtype=xp.int32, device=device)[None, :]
+            nd = xp.arange(abs(md), n_end, dtype=xp.int32, device=device)[:, None]
             result[idx(nd, md), idx(n, m)] = translational_coefficients_iter(
                 m=m,
                 md=md,
                 n_end=n_end,
-                translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n[
-                    idx(xp.arange(n_end), md), m
-                ],
-                translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd[
-                    md, idx(xp.arange(n_end), m)
-                ],
+                translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n,
+                translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd,
             )
     return result
