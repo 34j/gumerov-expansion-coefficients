@@ -293,12 +293,8 @@ def translational_coefficients_iter(
 
     # [nd, n]
     md_m_fixed = xp.zeros((sized, size), dtype=dtype, device=device)
-    md_m_fixed[:, 0] = translational_coefficients_sectorial_n_m[
-        idx(xp.arange(mdabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32), md), m
-    ]
-    md_m_fixed[0, :] = translational_coefficients_sectorial_nd_md[
-        md, idx(xp.arange(mabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32), m)
-    ]
+    md_m_fixed[:, 0] = translational_coefficients_sectorial_n_m
+    md_m_fixed[0, :] = translational_coefficients_sectorial_nd_md
 
     # batch for nd, grow n
     ms = (
@@ -358,12 +354,26 @@ def translational_coefficients_all(
         for md in range(-n_end + 1, n_end):
             n = xp.arange(abs(m), n_end, dtype=xp.int32, device=device)[None, :]
             nd = xp.arange(abs(md), n_end, dtype=xp.int32, device=device)[:, None]
+            mabs, mdabs = abs(m), abs(md)
+            mlarger = max(mabs, mdabs)
             result[idx(nd, md), idx(n, m)] = translational_coefficients_iter(
                 m=m,
                 md=md,
                 n_end=n_end,
-                translational_coefficients_sectorial_n_m=translational_coefficients_sectorial_m_n,
-                translational_coefficients_sectorial_nd_md=translational_coefficients_sectorial_md_nd,
+                translational_coefficients_sectorial_n_m=translational_coefficients_sectorial_m_n[
+                    idx(
+                        xp.arange(mdabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
+                        xp.asarray(md),
+                    ),
+                    m,
+                ],
+                translational_coefficients_sectorial_nd_md=translational_coefficients_sectorial_md_nd[
+                    md,
+                    idx(
+                        xp.arange(mabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
+                        xp.asarray(m),
+                    ),
+                ],
             )
     return result
 
