@@ -319,6 +319,28 @@ $abs(m') < m$
   content((l, 0), $n$, anchor: "west")
   content((0, l), $n'$, anchor: "south")
   grid((0, 0), (k, k), step: 1.0, stroke: gray + 0.2pt)
+  rect((m - 0.2, md - 0.2), (N, N), fill: maroon.transparentize(50%))
+  line((m, md), (2 * N - calc.max(m, md), md), stroke: yellow + 2pt)
+  line(
+    (m, md),
+    (2 * N - calc.max(m, md), md),
+    (N, N - 2),
+    close: true,
+    fill: yellow.transparentize(70%),
+    stroke: none,
+  )
+  content((l, md), [$n' = abs(m')$])
+  content((0, md), $abs(m')$, anchor: "east")
+  line((m, md), (m, 2 * N - calc.max(m, md)), stroke: blue + 2pt)
+  line(
+    (m, md),
+    (m, 2 * N - calc.max(m, md)),
+    (N, N),
+    (N, N - 2),
+    close: true,
+    fill: blue.transparentize(70%),
+    stroke: none,
+  )
   anchor("x1", (6, 2))
   anchor("x2", (7, 3))
   anchor("x3", (7, 1))
@@ -341,11 +363,6 @@ $abs(m') < m$
   line("x5", "x8", mark: (start: "o", end: ">"))
   line("x6", "x8", mark: (start: "o", end: ">"))
   line("x7", "x8", mark: (start: "o", end: ">"))
-  rect((m - 0.2, md - 0.2), (N, N), fill: maroon.transparentize(50%))
-  line((m, md), (2 * N - calc.max(m, md), md), stroke: yellow + 2pt)
-  content((l, md), [$n' = abs(m')$])
-  content((0, md), $abs(m')$, anchor: "east")
-  line((m, md), (m, 2 * N - calc.max(m, md)), stroke: blue + 2pt)
   content((m, l), [$n = abs(m)$])
   content((m, 0), $abs(m)$, anchor: "north")
   content((0, N), $N$, anchor: "east")
