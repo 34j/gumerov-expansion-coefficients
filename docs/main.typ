@@ -334,16 +334,16 @@ $abs(m') < m$
   line("x6", "x8", mark: (start: "o", end: ">"))
   line("x7", "x8", mark: (start: "o", end: ">"))
   rect((m - 0.2, md - 0.2), (N, N), fill: maroon.transparentize(50%))
-  line((m, md), (2 * N - md, md), stroke: yellow + 2pt)
+  line((m, md), (2 * N - calc.max(m, md), md), stroke: yellow + 2pt)
   content((l, md), [$n' = abs(m')$])
   content((0, md), $abs(m')$, anchor: "east")
-  line((m, md), (m, 2 * N - m), stroke: blue + 2pt)
+  line((m, md), (m, 2 * N - calc.max(m, md)), stroke: blue + 2pt)
   content((m, l), [$n = abs(m)$])
   content((m, 0), $abs(m)$, anchor: "north")
   content((0, N), $N$, anchor: "east")
-  content((0, 2 * N - m), $2N-abs(m)$, anchor: "east")
+  content((0, 2 * N - m), $2N-max(abs(m),abs(m'))$, anchor: "east")
   content((N, 0), $N$, anchor: "north")
-  content((2 * N - md, 0), $2N-abs(m')$, anchor: "north")
+  content((2 * N - md, 0), $2N-max(abs(m),abs(m'))$, anchor: "north")
   line(
     (0, 0),
     (l, 0),
