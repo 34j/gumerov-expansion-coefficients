@@ -73,12 +73,14 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     assert sectorial[idx_i(0, 0), 1] == pytest.approx(0.01656551 - 0.05797928j)
     assert sectorial[idx_i(0, 0), 2] == pytest.approx(0.15901178 + 0.09894066j)
     assert sectorial[idx_i(0, 0), 3] == pytest.approx(-0.04809683 + 0.04355622j)
+    assert sectorial[idx_i(0, 0), -2] == pytest.approx(0.15901178 - 0.09894066j)
     assert sectorial[idx_i(1, 0), 1] == pytest.approx(-0.01094844 + 0.03831954j)
     assert sectorial[idx_i(1, -1), 1] == pytest.approx(-0.17418868 - 0.10838406j)
     assert sectorial[idx_i(1, 1), 1] == pytest.approx(0.18486702 + 0.0j)
 
     # assert sectorial[idx_i(2, 1), 0] == pytest.approx(-0.01413437 - 0.04947031j)
     assert sectorial[idx_i(2, 1), 1] == pytest.approx(-0.00290188 + 0.0j, abs=1e-7)
+    assert sectorial[idx_i(2, 1), -1] == pytest.approx((0.01716189 - 0.01067851j), abs=1e-7)
 
 
 def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:

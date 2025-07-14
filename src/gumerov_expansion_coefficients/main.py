@@ -163,7 +163,7 @@ def translational_coefficients_sectorial_n_m(
     result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
     for m in range(2 * n_end - 2):
-        nd, md = idx_all(2 * n_end - m - 2, xp=xp)
+        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp)
         result[idx(nd, md), m + 1] = (
             1
             / b(xp.asarray(m + 1), xp.asarray(-m - 1))
@@ -174,7 +174,7 @@ def translational_coefficients_sectorial_n_m(
         )
     # 4.68
     for m in range(2 * n_end - 2):
-        nd, md = idx_all(n_end, xp=xp)
+        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp)
         result[idx(nd, md), -m - 1] = (
             1
             / b(xp.asarray(m + 1), xp.asarray(-m - 1))
