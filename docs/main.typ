@@ -79,7 +79,7 @@
     b^m_n underbrace(efc^(m' m+1)_(n' n-1),m = n ==> 0 "(4.31)") - b^(-m-1)_(n+1) efc^(m' m+1)_(n' n+1) = b^(m'-1)_(n'+1) efc^(m'-1 m)_(n' + 1 n) - b^(-m')_(n') efc^(m'-1 m)_(n' - 1 n)
   $
   $
-    b^m_n = 1_(abs(m) <= n) sign(m) sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
+    b^m_n = 1_(abs(m) <= n) underbrace(cases(1 &(m >= 0),-1 &(m < 0)),"Not" sign(m) "!") sqrt(((n-m-1)(n-m))/((2n-1)(2n+1)))
   $
 ] <b1>
 
