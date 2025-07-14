@@ -176,12 +176,12 @@ def translational_coefficients_sectorial(
     for m in range(n_end - 1):
         m = -m
         nd, md = idx_all(n_end, xp=xp)
-        result[idx(nd, md), -m - 1] = (
+        result[idx(nd, md), m - 1] = (
             1
             / b(xp.asarray(m + 1), xp.asarray(-m - 1))
             * (
-                b(nd, md) * getitem_outer_zero(result, (idx(nd - 1, md + 1), -m))
-                - b(nd + 1, -md - 1) * getitem_outer_zero(result, (idx(nd + 1, md + 1), -m))
+                b(nd, md) * getitem_outer_zero(result, (idx(nd - 1, md + 1), m))
+                - b(nd + 1, -md - 1) * getitem_outer_zero(result, (idx(nd + 1, md + 1), m))
             )
         )
     return result
