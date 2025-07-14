@@ -103,7 +103,7 @@ def getitem_outer_zero(
 def translational_coefficients_sectorial_init(
     kr: Array, theta: Array, phi: Array, same: bool, n_end: int, /
 ) -> Array:
-    """Initial values of sectorial translational coefficients (E|F)^{m',m}_{0, 0}
+    """Initial values of sectorial translational coefficients (E|F)^{m',0}_{n', 0}
 
     Parameters
     ----------
@@ -125,7 +125,7 @@ def translational_coefficients_sectorial_init(
         Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
     """
     xp = array_namespace(kr, theta, phi)
-    n, m = idx_all(n_end, xp=xp)
+    n, m = idx_all(2 * n_end - 1, xp=xp)
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
     if not same:
         # 4.43
@@ -140,7 +140,7 @@ def translational_coefficients_sectorial(
     n_end: int,
     translational_coefficients_sectorial_init: Array,
 ) -> Array:
-    """Sectorial translational coefficients (E|F)^{m',m}_{n',|m|}
+    """Sectorial translational coefficients (E|F)^{m',m}_{n',n=|m|}
 
     Parameters
     ----------
@@ -159,26 +159,26 @@ def translational_coefficients_sectorial(
     xp = array_namespace(translational_coefficients_sectorial_init)
     dtype = translational_coefficients_sectorial_init.dtype
     device = translational_coefficients_sectorial_init.device
-    result = xp.zeros((ndim_harm(2 * n_end), 2 * n_end - 1), dtype=dtype, device=device)
+    result = xp.zeros((ndim_harm(2 * n_end - 1), 2 * n_end - 1), dtype=dtype, device=device)
     result[:, 0] = translational_coefficients_sectorial_init
     # 4.67
-    for m in range(n_end):
+    for m in range(n_end - 1):
         nd, md = idx_all(n_end, xp=xp)
         result[idx(nd, md), m + 1] = (
             1
-            / b(m + 1, -m - 1)
+            / b(xp.asarray(m + 1), xp.asarray(-m - 1))
             * (
                 b(nd, -md) * getitem_outer_zero(result, (idx(nd - 1, md - 1), m))
                 - b(nd + 1, md - 1) * getitem_outer_zero(result, (idx(nd + 1, md - 1), m))
             )
         )
     # 4.68
-    for m in range(n_end):
+    for m in range(n_end - 1):
         m = -m
         nd, md = idx_all(n_end, xp=xp)
         result[idx(nd, md), -m - 1] = (
             1
-            / b(m + 1, -m - 1)
+            / b(xp.asarray(m + 1), xp.asarray(-m - 1))
             * (
                 b(nd, md) * getitem_outer_zero(result, (idx(nd - 1, md + 1), -m))
                 - b(nd + 1, -md - 1) * getitem_outer_zero(result, (idx(nd + 1, md + 1), -m))

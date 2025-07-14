@@ -7,6 +7,7 @@ from gumerov_expansion_coefficients.main import (
     idx_i,
     minus_1_power,
     ndim_harm,
+    translational_coefficients_sectorial,
     translational_coefficients_sectorial_init,
 )
 
@@ -46,8 +47,24 @@ def test_init(xp: ArrayNamespaceFull) -> None:
     # Gumerov (2, -7, 1)
     k = xp.asarray(1.0)
     r = xp.asarray(7.3484693)
-    phi = xp.asarray(-1.2924967)
     theta = xp.asarray(1.43429)
-    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, 4)
+    phi = xp.asarray(-1.2924967)
+    n_end = 4
+    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
     assert init[idx_i(2, 1)] == pytest.approx(-0.01413437 - 0.04947031j)
     assert init[idx_i(3, 2)] == pytest.approx(-0.01853696 + 0.01153411j)
+
+
+def test_sectorial(xp: ArrayNamespaceFull) -> None:
+    # Gumerov (2, -7, 1)
+    k = xp.asarray(1.0)
+    r = xp.asarray(7.3484693)
+    theta = xp.asarray(1.43429)
+    phi = xp.asarray(-1.2924967)
+    n_end = 4
+    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
+    sectorial = translational_coefficients_sectorial(
+        n_end=n_end,
+        translational_coefficients_sectorial_init=init,
+    )
+    assert sectorial[idx_i(2, 1), 0] == pytest.approx(-0.01413437 - 0.04947031j)
