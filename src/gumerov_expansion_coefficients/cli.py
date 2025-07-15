@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import typer
-from array_api_compat import numpy, torch
+from array_api_compat import torch
 from cm_time import timer
 from rich import print
 
@@ -16,17 +16,19 @@ app = typer.Typer()
 @app.command()
 def benchmark() -> None:
     with Path("timing_results.csv").open("w") as f:
-        writer = csv.DictWriter(f, fieldnames=["backend", "device", "size", "n_end", "time"])
+        writer = csv.DictWriter(
+            f, fieldnames=["backend", "device", "dtype", "size", "n_end", "time"]
+        )
         writer.writeheader()
         for name, xp in [
-            ("numpy", numpy),
+            # ("numpy", numpy),
             ("torch", torch),
             # ("jax", jnp),
         ]:
             for device in ["cuda", "cpu"]:
                 for dtype in [xp.float32, xp.float64]:
                     try:
-                        for size in 2 ** xp.arange(10, 14):
+                        for size in 2 ** xp.arange(8, 12):
                             for n_end in range(8, 14):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
@@ -42,6 +44,7 @@ def benchmark() -> None:
                                 result = {
                                     "backend": name,
                                     "device": device,
+                                    "dtype": str(dtype).split(".")[-1],
                                     "size": int(size),
                                     "n_end": n_end,
                                     "time": t.elapsed,
