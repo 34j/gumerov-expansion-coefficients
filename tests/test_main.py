@@ -28,7 +28,7 @@ def test_idx_i() -> None:
 
 
 def test_idx_all(xp: ArrayNamespaceFull) -> None:
-    n, m = idx_all(3, xp=xp)
+    n, m = idx_all(3, xp=xp, dtype=xp.int32, device=None)
     assert xp.all(n == xp.asarray([0, 1, 1, 1, 2, 2, 2, 2, 2]))
     assert xp.all(m == xp.asarray([0, -1, 0, 1, -2, -1, 0, 1, 2]))
 

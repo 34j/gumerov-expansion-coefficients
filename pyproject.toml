@@ -29,7 +29,6 @@ dependencies = [
   "array-api-compat>=1.11.2",
   "array-api-extra>=0.1.1",
   "array-api-jit>=0.0.0",
-  "frozendict>=2.4.6",
   "numba>=0.60.0",
   "rich>=10",
   "scipy>=1.13.1",
@@ -37,6 +36,7 @@ dependencies = [
   "typer>=0.15,<1",
   "types-array-api>=1.1.4",
 ]
+
 urls."Bug Tracker" = "https://github.com/34j/gumerov-expansion-coefficients/issues"
 urls.Changelog = "https://github.com/34j/gumerov-expansion-coefficients/blob/main/CHANGELOG.md"
 urls.documentation = "https://gumerov-expansion-coefficients.readthedocs.io"
@@ -44,12 +44,15 @@ urls.repository = "https://github.com/34j/gumerov-expansion-coefficients"
 scripts.gumerov-expansion-coefficients = "gumerov_expansion_coefficients.cli:app"
 scripts.gec = "gumerov_expansion_coefficients.cli:app"
 
-[dependency-groups]
+
+[project.optional-dependencies]
 cli = [
     "cm-time>=0.1.2",
     "pandas>=2.3.1",
     "seaborn>=0.13.2",
 ]
+
+[dependency-groups]
 dev = [
   "pytest>=8,<9",
   "pytest-cov>=6,<7",

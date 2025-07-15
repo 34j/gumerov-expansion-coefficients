@@ -1,6 +1,6 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from types import EllipsisType
-from typing import ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace
@@ -17,13 +17,29 @@ jit = jit_raw()
 def R(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Regular elementary solution of 3D Helmholtz equation."""
     xp = array_namespace(n, m, kr, theta, phi)
-    return xp.asarray(spherical_jn(n, kr) * sph_harm_y(n, m, theta, phi))
+    device = kr.device
+    dtype = kr.dtype
+    if dtype == xp.float32:
+        dtype = xp.complex64
+    elif dtype == xp.float64:
+        dtype = xp.complex128
+    return xp.asarray(
+        spherical_jn(n, kr) * sph_harm_y(n, m, theta, phi), dtype=dtype, device=device
+    )
 
 
 def S(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Singular elementary solution of 3D Helmholtz equation."""
     xp = array_namespace(n, m, kr, theta, phi)
-    return xp.asarray(spherical_yn(n, kr) * sph_harm_y(n, m, theta, phi))
+    device = kr.device
+    dtype = kr.dtype
+    if dtype == xp.float32:
+        dtype = xp.complex64
+    elif dtype == xp.float64:
+        dtype = xp.complex128
+    return xp.asarray(
+        spherical_yn(n, kr) * sph_harm_y(n, m, theta, phi), dtype=dtype, device=device
+    )
 
 
 # Gumerov's notation
@@ -54,9 +70,10 @@ def idx(n: Array, m: Array, /) -> Array:
 
 
 @jit
-def idx_all(n_end: int, /, xp: ArrayNamespace) -> tuple[Array, Array]:
-    n = xp.arange(n_end, dtype=xp.int32)[:, None]
-    m = xp.arange(-n_end + 1, n_end, dtype=xp.int32)[None, :]
+def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
+    dtype = dtype or xp.int32
+    n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
+    m = xp.arange(-n_end + 1, n_end, dtype=dtype, device=device)[None, :]
     n, m = xp.broadcast_arrays(n, m)
     mask = n >= xp.abs(m)
     return n[mask], m[mask]
@@ -135,14 +152,22 @@ def translational_coefficients_sectorial_init(
     """
     xp = array_namespace(kr, theta, phi)
     kr, theta, phi = kr[..., None], theta[..., None], phi[..., None]
-    n, m = idx_all(2 * n_end - 1, xp=xp)
+    n, m = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=kr.device)
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
     if not same:
         # 4.43
-        return minus_1_power(n) * xp.sqrt(xp.asarray(4.0) * xp.pi) * S(n, -m, kr, theta, phi)
+        return (
+            minus_1_power(n)
+            * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
+            * S(n, -m, kr, theta, phi)
+        )
     else:
         # 4.58
-        return minus_1_power(n) * xp.sqrt(xp.asarray(4.0) * xp.pi) * R(n, -m, kr, theta, phi)
+        return (
+            minus_1_power(n)
+            * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
+            * R(n, -m, kr, theta, phi)
+        )
 
 
 @jit
@@ -174,12 +199,19 @@ def translational_coefficients_sectorial_n_m(
     device = translational_coefficients_sectorial_init.device
     result = xp.zeros((*shape, ndim_harm(2 * n_end - 1), 4 * n_end - 1), dtype=dtype, device=device)
     result[..., :, 0] = translational_coefficients_sectorial_init
+    if dtype == xp.complex64:
+        dtype = xp.float32
+    elif dtype == xp.complex128:
+        dtype = xp.float64
     # 4.67
     for m in range(2 * n_end - 2):
-        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp)
+        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp, dtype=xp.int32, device=device)
         result[..., idx(nd, md), m + 1] = (
             1
-            / b(xp.asarray(m + 1), xp.asarray(-m - 1))
+            / b(
+                xp.asarray(m + 1, dtype=dtype, device=device),
+                xp.asarray(-m - 1, dtype=dtype, device=device),
+            )
             * (
                 b(nd, -md) * getitem_outer_zero(result, (..., idx(nd - 1, md - 1), m), axis=-2)
                 - b(nd + 1, md - 1)
@@ -188,10 +220,13 @@ def translational_coefficients_sectorial_n_m(
         )
     # 4.68
     for m in range(2 * n_end - 2):
-        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp)
+        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp, dtype=xp.int32, device=device)
         result[..., idx(nd, md), -m - 1] = (
             1
-            / b(xp.asarray(m + 1), xp.asarray(-m - 1))
+            / b(
+                xp.asarray(m + 1, dtype=dtype, device=device),
+                xp.asarray(-m - 1, dtype=dtype, device=device),
+            )
             * (
                 b(nd, md) * getitem_outer_zero(result, (..., idx(nd - 1, md + 1), -m), axis=-2)
                 - b(nd + 1, -md - 1)
@@ -280,7 +315,7 @@ def translational_coefficients_sectorial_nd_md(
         axis=0,
     )
     n = xp.abs(m)
-    nd, md = idx_all(2 * n_end - 1, xp=xp)
+    nd, md = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=device)
     # 4.61
     return (
         minus_1_power(n[:, None] + nd[None, :])
@@ -317,6 +352,10 @@ def translational_coefficients_iter(
     md_m_fixed[..., :, 0] = translational_coefficients_sectorial_n_m
     md_m_fixed[..., 0, :] = translational_coefficients_sectorial_nd_md
 
+    if dtype == xp.complex64:
+        dtype = xp.float32
+    elif dtype == xp.complex128:
+        dtype = xp.float64
     # batch for nd, grow n
     ms = (
         (md, m),
@@ -330,10 +369,10 @@ def translational_coefficients_iter(
         for i in range(n_iter):
             # 4.26, 2nd term is the result
             n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 2)
-            n1f = xp.arange(n1.start, n1.stop, dtype=xp.float32, device=device)
-            n2f = xp.asarray(i + m2abs, dtype=xp.float32, device=device)
-            m1f = xp.asarray(m1, dtype=xp.float32, device=device)
-            m2f = xp.asarray(m2, dtype=xp.float32, device=device)
+            n1f = xp.arange(n1.start, n1.stop, dtype=xp.int32, device=device)
+            n2f = xp.asarray(i + m2abs, dtype=dtype, device=device)
+            m1f = xp.asarray(m1, dtype=dtype, device=device)
+            m2f = xp.asarray(m2, dtype=dtype, device=device)
             md_m_n2_fixed = (
                 -a(n1f, m1f) * md_m_fixed[..., i + 2 : (None if i == 0 else -i), i]  # 3rd
                 + a(n1f - 1, m1f) * md_m_fixed[..., i : -i - 2, i]  # 4th
