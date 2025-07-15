@@ -28,7 +28,7 @@ def benchmark() -> None:
             for device in ["cuda", "cpu"]:
                 for dtype in [xp.float32, xp.float64]:
                     try:
-                        for size in 2 ** xp.arange(8, 12):
+                        for size in 2 ** xp.arange(8, 13):
                             for n_end in range(8, 14):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
@@ -71,7 +71,10 @@ def plot() -> None:
         row="dtype",
         kind="line",
         markers={k: "o" if "cuda" in k else "X" for k in hue_unique},
+        height=3,
+        aspect=1,
     )
+    g.set_xlabels("N - 1")
     g.set_ylabels("Time (s)")
-    g.set(xscale="log", yscale="log")
+    g.set(yscale="log")
     g.savefig("timing_results.png", dpi=300, bbox_inches="tight")
