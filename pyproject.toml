@@ -100,9 +100,6 @@ lint.isort.known-first-party = [ "gumerov_expansion_coefficients", "tests" ]
 addopts = """\
     -v
     -Wdefault
-    --cov=gumerov_expansion_coefficients
-    --cov-report=term
-    --cov-report=xml
     """
 pythonpath = [ "src" ]
 

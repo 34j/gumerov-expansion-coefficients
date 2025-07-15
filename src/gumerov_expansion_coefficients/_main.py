@@ -43,14 +43,12 @@ def idx_i(n: int, m: int, /) -> int:
 
 
 @jit
-def idx(n: Array | int, m: Array | int, /) -> Array:
+def idx(n: Array, m: Array, /) -> Array:
     """Index for the coefficients."""
     # (0, 0) -> 0
     # (1, -1) -> 1
     # (1, 0) -> 2
     xp = array_namespace(n, m)
-    n = xp.asarray(n)
-    m = xp.asarray(m)
     m_abs = xp.abs(m)
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
@@ -76,10 +74,8 @@ def minus_1_power(x: Array, /) -> Array:
 
 
 @jit
-def a(n: Array | int, m: Array | int, /) -> Array:
+def a(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
-    n = xp.asarray(n)
-    m = xp.asarray(m)
     m_abs = xp.abs(m)
     return xp.where(
         m_abs > n,
@@ -89,7 +85,7 @@ def a(n: Array | int, m: Array | int, /) -> Array:
 
 
 @jit
-def b(n: Array | int, m: Array | int, /) -> Array:
+def b(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
     return xp.where(
@@ -335,14 +331,16 @@ def translational_coefficients_iter(
             # 4.26, 2nd term is the result
             n1 = slice(m1abs + i + 1, 2 * n_end - mlarger - i - 2)
             n1f = xp.arange(n1.start, n1.stop, dtype=xp.float32, device=device)
-            n2 = xp.asarray(i + m2abs)
+            n2f = xp.asarray(i + m2abs, dtype=xp.float32, device=device)
+            m1f = xp.asarray(m1, dtype=xp.float32, device=device)
+            m2f = xp.asarray(m2, dtype=xp.float32, device=device)
             md_m_n2_fixed = (
-                -a(n1f, m1) * md_m_fixed[..., i + 2 : (None if i == 0 else -i), i]  # 3rd
-                + a(n1f - 1, m1) * md_m_fixed[..., i : -i - 2, i]  # 4th
+                -a(n1f, m1f) * md_m_fixed[..., i + 2 : (None if i == 0 else -i), i]  # 3rd
+                + a(n1f - 1, m1f) * md_m_fixed[..., i : -i - 2, i]  # 4th
             )
             if i > 0:
-                md_m_n2_fixed += a(n2 - 1, m2) * md_m_fixed[..., i + 1 : -i - 1, i - 1]  # 1st
-            md_m_fixed[..., i + 1 : -i - 1, i + 1] = md_m_n2_fixed / a(n2, m2)
+                md_m_n2_fixed += a(n2f - 1, m2f) * md_m_fixed[..., i + 1 : -i - 1, i - 1]  # 1st
+            md_m_fixed[..., i + 1 : -i - 1, i + 1] = md_m_n2_fixed / a(n2f, m2f)
         md_m_fixed = xp.moveaxis(md_m_fixed, -2, -1)
     return md_m_fixed[..., : n_end - abs(md), : n_end - abs(m)]
 
@@ -383,7 +381,11 @@ def translational_coefficients_all(
             nd = xp.arange(abs(md), n_end, dtype=xp.int32, device=device)[:, None]
             mabs, mdabs = abs(m), abs(md)
             mlarger = max(mabs, mdabs)
-            result[..., idx(nd, md), idx(n, m)] = translational_coefficients_iter(
+            result[
+                ...,
+                idx(nd, xp.asarray(md, dtype=xp.int32, device=device)),
+                idx(n, xp.asarray(m, dtype=xp.int32, device=device)),
+            ] = translational_coefficients_iter(
                 m=m,
                 md=md,
                 n_end=n_end,
@@ -391,7 +393,7 @@ def translational_coefficients_all(
                     ...,
                     idx(
                         xp.arange(mdabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
-                        md,
+                        xp.asarray(md, dtype=xp.int32, device=device),
                     ),
                     m,
                 ],
@@ -400,7 +402,7 @@ def translational_coefficients_all(
                     md,
                     idx(
                         xp.arange(mabs, 2 * n_end - mlarger - 1, device=device, dtype=xp.int32),
-                        m,
+                        xp.asarray(m, dtype=xp.int32, device=device),
                     ),
                 ],
                 shape=shape,
