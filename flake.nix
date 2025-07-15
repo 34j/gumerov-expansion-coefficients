@@ -33,6 +33,13 @@
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = with pkgs; [
+          python3
+          (python3.withPackages (
+            ps: with ps; [
+              torchWithCuda
+              # Add other python packages here
+            ]
+          ))
           cudatoolkit
           cudaPackages.cudnn
           cudaPackages.cuda_cudart
@@ -45,10 +52,10 @@
         shellHook = ''
           export CUDA_PATH=${pkgs.cudatoolkit}
 
-          # # Set CC to GCC 13 to avoid the version mismatch error
-          # export CC=${pkgs.gcc13}/bin/gcc
-          # export CXX=${pkgs.gcc13}/bin/g++
-          # export PATH=${pkgs.gcc13}/bin:$PATH
+          # Set CC to GCC 13 to avoid the version mismatch error
+          export CC=${pkgs.gcc13}/bin/gcc
+          export CXX=${pkgs.gcc13}/bin/g++
+          export PATH=${pkgs.gcc13}/bin:$PATH
 
           # Add necessary paths for dynamic linking
           export LD_LIBRARY_PATH=${

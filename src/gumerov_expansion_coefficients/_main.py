@@ -3,17 +3,18 @@ from types import EllipsisType
 from typing import Any, ParamSpec, TypeVar
 
 from array_api._2024_12 import Array, ArrayNamespace
-from array_api_compat import array_namespace
+from array_api_compat import array_namespace, to_device
 from array_api_jit import jit as jit_raw
 from scipy.special import sph_harm_y, spherical_jn, spherical_yn
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
-jit = jit_raw()
+jit = jit_raw()  # {"torch": lambda x: x})
 
 
 # (2.14)
+@jit
 def R(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Regular elementary solution of 3D Helmholtz equation."""
     xp = array_namespace(n, m, kr, theta, phi)
@@ -23,11 +24,17 @@ def R(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
         dtype = xp.complex64
     elif dtype == xp.float64:
         dtype = xp.complex128
+    n = to_device(n, "cpu")
+    m = to_device(m, "cpu")
+    kr = to_device(kr, "cpu")
+    theta = to_device(theta, "cpu")
+    phi = to_device(phi, "cpu")
     return xp.asarray(
         spherical_jn(n, kr) * sph_harm_y(n, m, theta, phi), dtype=dtype, device=device
     )
 
 
+@jit
 def S(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
     """Singular elementary solution of 3D Helmholtz equation."""
     xp = array_namespace(n, m, kr, theta, phi)
