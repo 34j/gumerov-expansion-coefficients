@@ -2,50 +2,99 @@
 from types import EllipsisType
 from typing import Any, ParamSpec, TypeVar
 
+import numba
+import numba.extending
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
+from array_api_compat import numpy as np
 from array_api_jit import jit as jit_raw
-from scipy.special import sph_harm_y, spherical_jn, spherical_yn
+from numba import prange
+from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
-jit = jit_raw()  # {"torch": lambda x: x})
+jit = jit_raw({"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
+pjit = jit_raw(
+    {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
+)  # {"torch": lambda x: x})
 
 
+# jit = lambda x: x  # type: ignore
+# pjit = lambda x: x  # type: ignore
 # (2.14)
-@jit
-def R(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
-    """Regular elementary solution of 3D Helmholtz equation."""
-    xp = array_namespace(n, m, kr, theta, phi)
+def R_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
+    """Regular elementary solution of 3D Helmholtz equation.
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Regular elementary solution of 3D Helmholtz equation of shape (..., ndim_harm(n_end),)
+    """
+    xp = array_namespace(kr, theta, phi)
     device = kr.device
     dtype = kr.dtype
     if dtype == xp.float32:
         dtype = xp.complex64
     elif dtype == xp.float64:
         dtype = xp.complex128
-    n = to_device(n, "cpu")
-    m = to_device(m, "cpu")
+    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=device)
     kr = to_device(kr, "cpu")
     theta = to_device(theta, "cpu")
     phi = to_device(phi, "cpu")
     return xp.asarray(
-        spherical_jn(n, kr) * sph_harm_y(n, m, theta, phi), dtype=dtype, device=device
+        spherical_jn(n, kr[..., None])
+        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
+        dtype=dtype,
+        device=device,
     )
 
 
-@jit
-def S(n: Array, m: Array, kr: Array, theta: Array, phi: Array) -> Array:
-    """Singular elementary solution of 3D Helmholtz equation."""
-    xp = array_namespace(n, m, kr, theta, phi)
+def S_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
+    """Singular elementary solution of 3D Helmholtz equation.
+
+    Parameters
+    ----------
+    kr : Array
+        k * r of shape (...,)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Singular elementary solution of 3D Helmholtz equation of shape (..., ndim_harm(n_end),)"""
+    xp = array_namespace(kr, theta, phi)
     device = kr.device
     dtype = kr.dtype
     if dtype == xp.float32:
         dtype = xp.complex64
     elif dtype == xp.float64:
         dtype = xp.complex128
+    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
+    kr = to_device(kr, "cpu")
+    theta = to_device(theta, "cpu")
+    phi = to_device(phi, "cpu")
     return xp.asarray(
-        spherical_yn(n, kr) * sph_harm_y(n, m, theta, phi), dtype=dtype, device=device
+        spherical_yn(n, kr)
+        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
+        dtype=dtype,
+        device=device,
     )
 
 
@@ -158,7 +207,6 @@ def translational_coefficients_sectorial_init(
         Initial sectorial translational coefficients of shape (..., ndim_harm(n_end),)
     """
     xp = array_namespace(kr, theta, phi)
-    kr, theta, phi = kr[..., None], theta[..., None], phi[..., None]
     n, m = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=kr.device)
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
     if not same:
@@ -166,14 +214,14 @@ def translational_coefficients_sectorial_init(
         return (
             minus_1_power(n)
             * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
-            * S(n, -m, kr, theta, phi)
+            * S_all(kr, theta, phi, n_end=2 * n_end - 1)[..., idx(n, -m)]
         )
     else:
         # 4.58
         return (
             minus_1_power(n)
             * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
-            * R(n, -m, kr, theta, phi)
+            * R_all(kr, theta, phi, n_end=2 * n_end - 1)[..., idx(n, -m)]
         )
 
 
@@ -243,7 +291,6 @@ def translational_coefficients_sectorial_n_m(
     return result
 
 
-@jit
 def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
     """
     Flip a symmetric array.
@@ -290,7 +337,6 @@ def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
     return xp.concat([zero, xp.flip(nonzero, axis=axis)], axis=axis)
 
 
-@jit
 def translational_coefficients_sectorial_nd_md(
     *,
     n_end: int,
@@ -391,7 +437,7 @@ def translational_coefficients_iter(
     return md_m_fixed[..., : n_end - abs(md), : n_end - abs(m)]
 
 
-@jit
+@pjit
 def translational_coefficients_all(
     *,
     n_end: int,
@@ -421,8 +467,8 @@ def translational_coefficients_all(
     device = translational_coefficients_sectorial_m_n.device
     shape = translational_coefficients_sectorial_m_n.shape[:-2]
     result = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
-    for m in range(-n_end + 1, n_end):
-        for md in range(-n_end + 1, n_end):
+    for m in prange(-n_end + 1, n_end):
+        for md in prange(-n_end + 1, n_end):
             n = xp.arange(abs(m), n_end, dtype=xp.int32, device=device)[None, :]
             nd = xp.arange(abs(md), n_end, dtype=xp.int32, device=device)[:, None]
             mabs, mdabs = abs(m), abs(md)
