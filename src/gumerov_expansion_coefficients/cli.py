@@ -61,15 +61,16 @@ def benchmark() -> None:
 @app.command()
 def plot() -> None:
     df = pd.read_csv("timing_results.csv")
-    df["hue"] = df[["backend", "device"]].agg("-".join, axis=1)
-    hue_unique = df["hue"].unique()
+    hue_name = "Backend, Device"
+    df[hue_name] = df[["backend", "device"]].agg("-".join, axis=1)
+    hue_unique = df[hue_name].unique()
     sns.set_theme()
     g = sns.relplot(
         data=df,
         x="n_end",
         y="time",
-        hue="hue",
-        style="hue",
+        hue=hue_name,
+        style=hue_name,
         col="size",
         row="dtype",
         kind="line",
@@ -80,4 +81,6 @@ def plot() -> None:
     g.set_xlabels("N - 1")
     g.set_ylabels("Time (s)")
     g.set(yscale="log")
+    g.savefig("timing_results.jpg", dpi=300, bbox_inches="tight")
     g.savefig("timing_results.png", dpi=300, bbox_inches="tight")
+    g.savefig("timing_results.eps", bbox_inches="tight")
