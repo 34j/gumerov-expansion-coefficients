@@ -30,7 +30,7 @@ def benchmark() -> None:
                     continue
                 for dtype in [xp.float32, xp.float64]:
                     try:
-                        for size in 2 ** xp.arange(8, 12):
+                        for size in 4 ** xp.arange(1, 6):
                             for n_end in range(2, 15, 2):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
