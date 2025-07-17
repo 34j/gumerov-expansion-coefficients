@@ -21,8 +21,8 @@ def benchmark() -> None:
         )
         writer.writeheader()
         for name, xp in [
-            ("numpy", numpy),
             ("torch", torch),
+            ("numpy", numpy),
             # ("jax", jnp),
         ]:
             for device in ["cuda", "cpu"]:
@@ -47,7 +47,7 @@ def benchmark() -> None:
                                 result = {
                                     "backend": name,
                                     "device": device,
-                                    "dtype": str(dtype).split(".")[-1],
+                                    "dtype": str(dtype).split(".")[-1].split("'")[0],
                                     "size": int(size),
                                     "n_end": n_end,
                                     "time": t.elapsed,

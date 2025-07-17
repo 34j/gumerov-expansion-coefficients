@@ -5,16 +5,19 @@ from typing import Any, ParamSpec, TypeVar
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
 from array_api_compat import numpy as np
+from array_api_jit import jit as jit_raw
 from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
 prange = range
 P = ParamSpec("P")
 T = TypeVar("T")
 
-# jit = jit_raw({"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
-# pjit = jit_raw(
-#     {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
-# )  # {"torch": lambda x: x})
+jit = jit_raw(fail_on_error=True)
+# {"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
+pjit = jit_raw(
+    fail_on_error=True
+    # {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
+)  # {"torch": lambda x: x})
 
 
 jit = lambda x: x  # noqa
