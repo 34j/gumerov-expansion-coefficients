@@ -5,9 +5,9 @@ from typing import Any, ParamSpec, TypeVar
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
 from array_api_compat import numpy as np
-from numba import prange
 from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
+prange = range
 P = ParamSpec("P")
 T = TypeVar("T")
 
@@ -48,7 +48,7 @@ def R_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
         dtype = xp.complex64
     elif dtype == xp.float64:
         dtype = xp.complex128
-    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=device)
+    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
     kr = to_device(kr, "cpu")
     theta = to_device(theta, "cpu")
     phi = to_device(phi, "cpu")
