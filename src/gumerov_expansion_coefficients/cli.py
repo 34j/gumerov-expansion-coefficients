@@ -28,9 +28,12 @@ def benchmark() -> None:
             for device in ["cuda", "cpu"]:
                 if name == "numpy" and device == "cuda":
                     continue
-                for dtype in [xp.float32, xp.float64]:
+                for dtype in [
+                    xp.float32,
+                    # xp.float64
+                ]:
                     try:
-                        for size in 4 ** xp.arange(1, 6):
+                        for size in 4 ** xp.arange(1, 7):
                             for n_end in range(2, 15, 2):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
@@ -41,7 +44,7 @@ def benchmark() -> None:
                                             kr=kr,
                                             theta=theta,
                                             phi=phi,
-                                            same=True,
+                                            same=False,
                                             n_end=n_end,
                                         )
                                 result = {
