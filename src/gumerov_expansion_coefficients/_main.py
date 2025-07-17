@@ -2,26 +2,25 @@
 from types import EllipsisType
 from typing import Any, ParamSpec, TypeVar
 
-import numba
-import numba.extending
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
 from array_api_compat import numpy as np
-from array_api_jit import jit as jit_raw
 from numba import prange
 from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
 P = ParamSpec("P")
 T = TypeVar("T")
 
-jit = jit_raw({"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
-pjit = jit_raw(
-    {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
-)  # {"torch": lambda x: x})
+# jit = jit_raw({"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
+# pjit = jit_raw(
+#     {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
+# )  # {"torch": lambda x: x})
 
 
-# jit = lambda x: x  # type: ignore
-# pjit = lambda x: x  # type: ignore
+jit = lambda x: x  # noqa
+pjit = lambda x: x  # noqa
+
+
 # (2.14)
 def R_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
     """Regular elementary solution of 3D Helmholtz equation.
@@ -168,6 +167,7 @@ def b(n: Array, m: Array, /) -> Array:
     )
 
 
+@jit
 def getitem_outer_zero(
     array: Array,
     indices: tuple[int | slice | EllipsisType | Array | None, ...],

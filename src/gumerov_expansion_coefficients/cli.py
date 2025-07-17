@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import typer
-from array_api_compat import numpy
+from array_api_compat import numpy, torch
 from cm_time import timer
 from rich import print
 
@@ -22,10 +22,10 @@ def benchmark() -> None:
         writer.writeheader()
         for name, xp in [
             ("numpy", numpy),
-            # ("torch", torch),
+            ("torch", torch),
             # ("jax", jnp),
         ]:
-            for device in ["cpu"]:
+            for device in ["cuda", "cpu"]:
                 for dtype in [xp.float32, xp.float64]:
                     try:
                         for size in 2 ** xp.arange(10, 11):
@@ -33,14 +33,15 @@ def benchmark() -> None:
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
                                 phi = xp.arange(size, dtype=dtype, device=device)
-                                with timer() as t:
-                                    translational_coefficients(
-                                        kr=kr,
-                                        theta=theta,
-                                        phi=phi,
-                                        same=True,
-                                        n_end=n_end,
-                                    )
+                                for _ in range(2):
+                                    with timer() as t:
+                                        translational_coefficients(
+                                            kr=kr,
+                                            theta=theta,
+                                            phi=phi,
+                                            same=True,
+                                            n_end=n_end,
+                                        )
                                 result = {
                                     "backend": name,
                                     "device": device,
