@@ -28,8 +28,8 @@ def benchmark() -> None:
             for device in ["cuda", "cpu"]:
                 for dtype in [xp.float32, xp.float64]:
                     try:
-                        for size in 2 ** xp.arange(10, 11):
-                            for n_end in range(8, 20):
+                        for size in 2 ** xp.arange(8, 12):
+                            for n_end in range(2, 15, 2):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
                                 phi = xp.arange(size, dtype=dtype, device=device)
