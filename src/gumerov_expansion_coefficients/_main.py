@@ -91,7 +91,7 @@ def S_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
     theta = to_device(theta, "cpu")
     phi = to_device(phi, "cpu")
     return xp.asarray(
-        spherical_yn(n, kr)
+        (spherical_jn(n, kr[..., None]) + 1j * spherical_yn(n, kr[..., None]))
         * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
         dtype=dtype,
         device=device,

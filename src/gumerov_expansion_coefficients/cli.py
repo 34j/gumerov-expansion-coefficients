@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import typer
-from array_api_compat import torch
+from array_api_compat import numpy
 from cm_time import timer
 from rich import print
 
@@ -21,15 +21,15 @@ def benchmark() -> None:
         )
         writer.writeheader()
         for name, xp in [
-            # ("numpy", numpy),
-            ("torch", torch),
+            ("numpy", numpy),
+            # ("torch", torch),
             # ("jax", jnp),
         ]:
-            for device in ["cuda", "cpu"]:
+            for device in ["cpu"]:
                 for dtype in [xp.float32, xp.float64]:
                     try:
-                        for size in 2 ** xp.arange(8, 13):
-                            for n_end in range(8, 14):
+                        for size in 2 ** xp.arange(10, 11):
+                            for n_end in range(8, 20):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
                                 phi = xp.arange(size, dtype=dtype, device=device)
@@ -52,7 +52,7 @@ def benchmark() -> None:
                                 writer.writerow(result)
                                 print(result)
                     except Exception as e:
-                        print(e)
+                        raise e
 
 
 @app.command()

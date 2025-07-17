@@ -1,7 +1,10 @@
 import pytest
-from array_api._2024_12 import ArrayNamespaceFull
+from array_api._2024_12 import Array, ArrayNamespaceFull
+from array_api_compat import array_namespace
+from array_api_compat import numpy as np
 
 from gumerov_expansion_coefficients._main import (
+    R_all,
     idx,
     idx_all,
     idx_i,
@@ -12,6 +15,14 @@ from gumerov_expansion_coefficients._main import (
     translational_coefficients_sectorial_n_m,
     translational_coefficients_sectorial_nd_md,
 )
+
+
+def euclidean_to_spherical(x: Array, y: Array, z: Array) -> tuple[Array, Array, Array]:
+    xp = array_namespace(x)
+    r = (x**2 + y**2 + z**2) ** 0.5
+    theta = xp.acos(z / r)
+    phi = xp.atan2(y, x)
+    return r, theta, phi
 
 
 def test_idx(xp: ArrayNamespaceFull) -> None:
@@ -121,3 +132,27 @@ def test_main(xp: ArrayNamespaceFull) -> None:
     assert coefs[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
     assert coefs[idx_i(2, 1), idx_i(4, -3)] == pytest.approx(-0.10065599 + 0.20439409j)
     assert coefs[idx_i(2, -1), idx_i(4, -3)] == pytest.approx(0.10999471 - 0.06844115j)
+
+
+def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
+    k = 1.0
+
+    x = xp.asarray([-1.0, 1.0, 0.0])
+    t = xp.asarray([2.0, -7.0, 1.0])
+    y = x + t
+    print(y)
+
+    # to spherical coordinates
+    x_sp = euclidean_to_spherical(x[0], x[1], x[2])
+    t_sp = euclidean_to_spherical(t[0], t[1], t[2])
+    y_sp = euclidean_to_spherical(y[0], y[1], y[2])
+
+    for n_end_add in [7, 9]:
+        x_R = R_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end_add)
+        t_coef = translational_coefficients(
+            k * t_sp[0], t_sp[1], t_sp[2], same=True, n_end=n_end_add
+        )
+        y_S = R_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add)
+        expected = y_S[idx_i(5, 2)]
+        actual = xp.vecdot(t_coef, x_R[:, None], axis=0)[idx_i(5, 2)]
+        print(np.round(complex(expected), decimals=6), np.round(complex(actual), decimals=6))
