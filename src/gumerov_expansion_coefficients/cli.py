@@ -65,7 +65,7 @@ def benchmark() -> None:
 def plot() -> None:
     df = pd.read_csv("timing_results.csv")
     hue_name = "Backend, Device"
-    df[hue_name] = df[["backend", "device"]].agg("-".join, axis=1)
+    df[hue_name] = df[["backend", "device"]].agg(", ".join, axis=1)
     hue_unique = df[hue_name].unique()
     sns.set_theme()
     g = sns.relplot(
