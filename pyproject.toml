@@ -11,7 +11,7 @@ license = { text = "MIT" }
 authors = [
   { name = "34j", email = "34j.95a2p@simplelogin.com" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",
   "Intended Audience :: Developers",
@@ -26,14 +26,31 @@ classifiers = [
 ]
 
 dependencies = [
+  "array-api-compat>=1.11.2",
+  "array-api-extra>=0.1.1",
+  "array-api-jit>=0.0.0",
+  "numba>=0.60.0",
   "rich>=10",
+  "scipy>=1.13.1",
+  "torch>=2.7.1",
   "typer>=0.15,<1",
+  "types-array-api>=1.1.5",
 ]
+
 urls."Bug Tracker" = "https://github.com/34j/gumerov-expansion-coefficients/issues"
 urls.Changelog = "https://github.com/34j/gumerov-expansion-coefficients/blob/main/CHANGELOG.md"
 urls.documentation = "https://gumerov-expansion-coefficients.readthedocs.io"
 urls.repository = "https://github.com/34j/gumerov-expansion-coefficients"
 scripts.gumerov-expansion-coefficients = "gumerov_expansion_coefficients.cli:app"
+scripts.gec = "gumerov_expansion_coefficients.cli:app"
+
+
+[project.optional-dependencies]
+cli = [
+    "cm-time>=0.1.2",
+    "pandas>=2.3.1",
+    "seaborn>=0.13.2",
+]
 
 [dependency-groups]
 dev = [
@@ -48,10 +65,10 @@ docs = [
 ]
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 lint.select = [
   "B",   # flake8-bugbear
-  "D",   # flake8-docstrings
+  # "D",   # flake8-docstrings
   "C4",  # flake8-comprehensions
   "S",   # flake8-bandit
   "F",   # pyflake
@@ -86,9 +103,6 @@ lint.isort.known-first-party = [ "gumerov_expansion_coefficients", "tests" ]
 addopts = """\
     -v
     -Wdefault
-    --cov=gumerov_expansion_coefficients
-    --cov-report=term
-    --cov-report=xml
     """
 pythonpath = [ "src" ]
 

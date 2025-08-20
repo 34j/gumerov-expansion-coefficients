@@ -44,7 +44,26 @@ Multiple translation and rotation coefficients for the 3D Helmholtz Equation
 
 Install this via pip (or your favourite package manager):
 
-`pip install gumerov-expansion-coefficients`
+```shell
+pip install gumerov-expansion-coefficients
+```
+
+## Usage
+
+```python
+from gumerov_expansion_coefficients import translational_coefficients
+
+translational_coefficients(
+    k * r, theta, phi, same=True, n_end=10
+)  # (R|R) coefficients from 0 to 9 th degree
+translational_coefficients(
+    k * r, theta, phi, same=False, n_end=10
+)  # (S|R) coefficients from 0 to 9 th degree
+```
+
+## References
+
+- Gumerov, N. A., & Duraiswami, R. (2004). Recursions for the Computation of Multipole Translation and Rotation Coefficients for the 3-D Helmholtz Equation. SIAM Journal on Scientific Computing, 25(4), 1344–1381. https://doi.org/10.1137/S1064827501399705
 
 ## Contributors ✨
 
