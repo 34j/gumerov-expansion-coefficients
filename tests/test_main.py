@@ -563,6 +563,6 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
             k * t_sp[0], t_sp[1], t_sp[2], same=True, n_end=n_end_add
         )
         y_S = R_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add)
-        expected = y_S[idx_i(1, 0)]
-        actual = xp.vecdot(t_coef, x_R[:, None], axis=0)[idx_i(1, 0)]
+        expected = y_S[idx_i(2, 0)]
+        actual = xp.vecdot(t_coef, x_R[:, None], axis=0)[idx_i(2, 0)]
         print(np.round(complex(expected), decimals=6), np.round(complex(actual), decimals=6))
