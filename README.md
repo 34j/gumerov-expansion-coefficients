@@ -44,7 +44,22 @@ Multiple translation and rotation coefficients for the 3D Helmholtz Equation
 
 Install this via pip (or your favourite package manager):
 
-`pip install gumerov-expansion-coefficients`
+```shell
+pip install gumerov-expansion-coefficients
+```
+
+## Usage
+
+```python
+from gumerov_expansion_coefficients import translational_coefficients
+
+translational_coefficients(
+    k * r, theta, phi, same=True, n_end=10
+)  # (R|R) coefficients from 0 to 9 th degree
+translational_coefficients(
+    k * r, theta, phi, same=False, n_end=10
+)  # (S|R) coefficients from 0 to 9 th degree
+```
 
 ## Contributors ✨
 
