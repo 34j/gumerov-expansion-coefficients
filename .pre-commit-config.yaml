@@ -6,6 +6,7 @@ default_stages: [pre-commit]
 ci:
   autofix_commit_msg: "chore(pre-commit.ci): auto fixes"
   autoupdate_commit_msg: "chore(pre-commit.ci): pre-commit autoupdate"
+  skip: [nixfmt]
 
 repos:
   - repo: https://github.com/commitizen-tools/commitizen
@@ -71,3 +72,7 @@ repos:
         additional_dependencies: ["cli:typstyle:0.12.14"]
         files: \.typ$
         args: [-i]
+  - repo: https://github.com/NixOS/nixfmt
+    rev: v1.0.0
+    hooks:
+      - id: nixfmt
