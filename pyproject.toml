@@ -54,6 +54,7 @@ cli = [
 
 [dependency-groups]
 dev = [
+  "numba-cuda[cu13]>=0.19.1",
   "pytest>=8,<9",
   "pytest-cov>=7,<8",
 ]
