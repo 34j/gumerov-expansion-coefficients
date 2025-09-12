@@ -1,11 +1,13 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from types import EllipsisType
+from typing import Any
 
+import numba
 import numpy as np
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from array_api_negative_index import flip_symmetric
 from numba import prange
+from numba.cuda.cudadrv.error import CudaSupportError
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
 
@@ -119,12 +121,15 @@ def translational_coefficients_sectorial_init(
         )
 
 
-def _set_coef(a: Array, nd: int, md: int, n: int, m: int, value: float, *, swap: bool = False) -> None:
+def _set_coef(
+    a: Array, nd: int, md: int, n: int, m: int, value: float, *, swap: bool = False
+) -> None:
     if swap:
         a[idx_i(n, m), idx_i(nd, md)] = value
     else:
         a[idx_i(nd, md), idx_i(n, m)] = value
-    
+
+
 def _get_coef(a: Array, nd: int, md: int, n: int, m: int, *, swap: bool = False) -> float:
     if swap:
         return a[idx_i(n, m), idx_i(nd, md)]
@@ -159,32 +164,40 @@ def _translational_coefficients_all(
         for md in prange(-nd, nd + 1):
             _set_coef(ret, nd, md, 0, 0, translational_coefficients_sectorial_init[idx_i(nd, md)])
 
-    for m in range(2*n_end - 2):
+    for m in range(2 * n_end - 2):
         n = abs(m)
         for nd in prange(2 * n_end - n - 2):
             for md in prange(-nd, nd + 1):
-                tmp = -b(nd + 1, md - 1) * _get_coef(ret, nd + 1, md - 1, n, m) # 3rd term
+                tmp = -b(nd + 1, md - 1) * _get_coef(ret, nd + 1, md - 1, n, m)  # 3rd term
                 if abs(md - 1) <= nd - 1:
-                    tmp += b(nd, -md) * _get_coef(ret, nd - 1, md - 1, n, m) # 4th term
+                    tmp += b(nd, -md) * _get_coef(ret, nd - 1, md - 1, n, m)  # 4th term
                 tmp /= b(n + 1, -m - 1)
-                _set_coef(ret, nd, md, n + 1, m + 1, tmp) # 2nd term
+                _set_coef(ret, nd, md, n + 1, m + 1, tmp)  # 2nd term
 
-    for m in range(2*n_end - 2):
+    for m in range(2 * n_end - 2):
         m = -m
         n = abs(m)
         for nd in prange(2 * n_end - n - 2):
             for md in prange(-nd, nd + 1):
-                tmp = b(nd, md) * _get_coef(ret, nd - 1, md + 1, n, m) # 1st term
+                tmp = b(nd, md) * _get_coef(ret, nd - 1, md + 1, n, m)  # 1st term
                 if abs(md + 1) <= nd - 1:
-                    tmp -= b(nd + 1, -md - 1) * _get_coef(ret, nd + 1, md + 1, n, m) # 2nd term
+                    tmp -= b(nd + 1, -md - 1) * _get_coef(ret, nd + 1, md + 1, n, m)  # 2nd term
                 tmp /= b(n + 1, m - 1)
                 _set_coef(ret, nd, md, n + 1, m - 1, tmp)
 
-    for m in range(2*n_end - 2):
+    for m in range(2 * n_end - 2):
         n = abs(m)
         for nd in prange(2 * n_end - n - 2):
             for md in prange(-nd, nd + 1):
-                _set_coef(ret, n, m, nd, md, minus_1_power(n + nd) * _get_coef(ret, nd, md, n, m), swap=True)
+                _set_coef(
+                    ret,
+                    n,
+                    m,
+                    nd,
+                    md,
+                    minus_1_power(n + nd) * _get_coef(ret, nd, md, n, m),
+                    swap=True,
+                )
 
     for m in prange(-n_end + 1, n_end):
         for md in prange(-n_end + 1, n_end):
@@ -200,8 +213,7 @@ def _translational_coefficients_all(
                     for n1 in prange(m1abs + i + 1, 2 * n_end - mlarger - i - 2):
                         n2 = i + m2abs
                         tmp = (
-                            -a(n1, m1)
-                            * _get_coef(ret, n1 + 1, m1, n2, m2, swap=m1_is_md) # 3rd
+                            -a(n1, m1) * _get_coef(ret, n1 + 1, m1, n2, m2, swap=m1_is_md)  # 3rd
                             + a(n1 - 1, m1)
                             * _get_coef(ret, n1 - 1, m1, n2, m2, swap=m1_is_md)  # 4th
                         )
@@ -212,6 +224,22 @@ def _translational_coefficients_all(
                             )  # 1st
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
     return ret
+
+
+_numba_args: tuple[list[Any], str] = (
+    [],
+    "(),(),(),(n)->()",
+)
+_translational_coefficients_all_parallel = numba.guvectorize(
+    *_numba_args, target="parallel", fastmath=True, cache=True
+)(_translational_coefficients_all)
+
+try:
+    _translational_coefficients_all_cuda = numba.guvectorize(
+        *_numba_args, target="cuda", cache=True
+    )(_translational_coefficients_all)
+except CudaSupportError:
+    _translational_coefficients_all_cuda = None
 
 
 def translational_coefficients_all(
@@ -240,7 +268,11 @@ def translational_coefficients_all(
     shape = translational_coefficients_sectorial_init.shape[:-1]
     ret = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
     return xp.asarray(
-        _translational_coefficients_all(
+        (
+            _translational_coefficients_all_cuda
+            if "cuda" in str(device)
+            else _translational_coefficients_all_parallel
+        )(
             n_end=n_end,
             translational_coefficients_sectorial_init=translational_coefficients_sectorial_init,
             ret=ret,

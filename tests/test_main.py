@@ -12,8 +12,6 @@ from gumerov_expansion_coefficients._main import (
     ndim_harm,
     translational_coefficients,
     translational_coefficients_sectorial_init,
-    translational_coefficients_sectorial_n_m,
-    translational_coefficients_sectorial_nd_md,
 )
 
 
@@ -75,11 +73,9 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
     n_end = 3
-    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
-    sectorial = translational_coefficients_sectorial_n_m(
-        n_end=n_end,
-        translational_coefficients_sectorial_init=init,
-    )
+    sectorial = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)[
+        :, idx(xp.arange(n_end), xp.arange(n_end))
+    ]
     # assert sectorial[idx_i(1, 1), 0] == pytest.approx(0.01656551+0.05797928j)
     assert sectorial[idx_i(0, 0), 1] == pytest.approx(0.01656551 - 0.05797928j)
     assert sectorial[idx_i(0, 0), 2] == pytest.approx(0.15901178 + 0.09894066j)
@@ -101,15 +97,9 @@ def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
     n_end = 2
-    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
-    sectorial_n_m = translational_coefficients_sectorial_n_m(
-        n_end=n_end,
-        translational_coefficients_sectorial_init=init,
-    )
-    sectorial_nd_md = translational_coefficients_sectorial_nd_md(
-        n_end=n_end,
-        translational_coefficients_sectorial_n_m=sectorial_n_m,
-    )
+    t = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)
+    sectorial_n_m = t[:, idx(xp.arange(n_end), xp.arange(n_end))]
+    sectorial_nd_md = t[idx(xp.arange(n_end), xp.arange(n_end)), :]
     assert sectorial_nd_md[1, idx_i(1, 0)] == sectorial_n_m[idx_i(1, 0), -1]
     assert sectorial_nd_md[1, idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
 
