@@ -1,13 +1,11 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from math import sqrt
-from types import EllipsisType
 from typing import Any
 
 import numba
-import numpy as np
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from numba import complex64, complex128, prange
+from numba import complex64, complex128, jit, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
@@ -18,6 +16,7 @@ from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, i
 # (E|F)^{m' m}_{,n} := (E|F)^{m' m}_{|m'| n}
 
 
+@jit()
 def idx_i(n: int, m: int, /) -> int:
     """Index for the coefficients."""
     # (0, 0) -> 0
@@ -38,6 +37,7 @@ def idx(n: Array, m: Array, /) -> Array:
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
 
+@jit(inline="always")
 def ndim_harm(n_end: int, /) -> int:
     """Number of spherical harmonics which degree is less than n_end."""
     return n_end**2
@@ -47,36 +47,27 @@ def minus_1_power(x: Array, /) -> Array:
     return 1 - 2 * (x % 2)
 
 
+minus_1_power_jit = jit(inline="always")(minus_1_power)
+
+
+@jit()
 def a(n: int, m: int, /) -> float:
     m_abs = abs(m)
     if m_abs > n:
         return 0
-    return np.sqrt((n + m_abs + 1) * (n - m_abs + 1) / ((2 * n + 1) * (2 * n + 3)))
+    return sqrt((n + m_abs + 1) * (n - m_abs + 1) / ((2 * n + 1) * (2 * n + 3)))
 
 
+@jit()
 def b(n: int, m: int, /) -> float:
     m_abs = abs(m)
     if m_abs > n:
         return 0
-    tmp = np.sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1)))
+    tmp = sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1)))
     if m >= 0:
         return tmp
     else:
         return -tmp
-
-
-def getitem_outer_zero(
-    array: Array,
-    indices: tuple[int | slice | EllipsisType | Array | None, ...],
-    /,
-    *,
-    axis: int = 0,
-) -> Array:
-    len_axis = array.shape[axis]
-    index_axis = indices[axis]
-    array = array[indices]
-    array[..., (index_axis < 0) | (index_axis >= len_axis)] = 0  # type: ignore
-    return array
 
 
 def translational_coefficients_sectorial_init(
@@ -122,16 +113,16 @@ def translational_coefficients_sectorial_init(
         )
 
 
-def _set_coef(
-    a: Array, nd: int, md: int, n: int, m: int, value: float, *, swap: bool = False
-) -> None:
+@jit(inline="always")
+def _set_coef(a: Array, nd: int, md: int, n: int, m: int, value: float, swap: bool = False) -> None:
     if swap:
         a[idx_i(n, m), idx_i(nd, md)] = value
     else:
         a[idx_i(nd, md), idx_i(n, m)] = value
 
 
-def _get_coef(a: Array, nd: int, md: int, n: int, m: int, *, swap: bool = False) -> float:
+@jit(inline="always")
+def _get_coef(a: Array, nd: int, md: int, n: int, m: int, swap: bool = False) -> float:
     if swap:
         return a[idx_i(n, m), idx_i(nd, md)]
     else:
@@ -139,8 +130,8 @@ def _get_coef(a: Array, nd: int, md: int, n: int, m: int, *, swap: bool = False)
 
 
 def _translational_coefficients_all(
-    translational_coefficients_sectorial_init: Array, ret: Array, _: Array
-) -> Array:
+    translational_coefficients_sectorial_init: Array, ret: Array, _: Array, /
+) -> None:
     """Translational coefficients (E|F)^{m',m}_{n',n}
 
     Parameters
@@ -150,11 +141,9 @@ def _translational_coefficients_all(
         of shape (..., ndim_harm(n_end),)
     ret : Array
         Empty array to store the result of shape (..., ndim_harm(n_end), ndim_harm(n_end))
+    _ : Array
+        Dummy return array for numba guvectorize
 
-    Returns
-    -------
-    Array
-        Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
     n_end = int(sqrt(ret.shape[-1]))
     for nd in prange(n_end):
@@ -192,7 +181,7 @@ def _translational_coefficients_all(
                     m,
                     nd,
                     md,
-                    minus_1_power(n + nd) * _get_coef(ret, nd, md, n, m),
+                    minus_1_power_jit(n + nd) * _get_coef(ret, nd, md, n, m),
                     swap=True,
                 )
 
@@ -203,7 +192,7 @@ def _translational_coefficients_all(
             n_iter = n_end - mlarger - 1
 
             for m1_is_md, m1, m2 in ((True, md, m), (False, m, md)):
-                del m, md
+                # del m, md
                 m1abs = abs(m1)
                 m2abs = abs(m2)
                 for i in range(n_iter):
@@ -220,7 +209,6 @@ def _translational_coefficients_all(
                                 * _get_coef(ret, n1, m1, n2 - 1, m2, swap=m1_is_md)  # 1st
                             )  # 1st
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
-    return ret
 
 
 _numba_args: tuple[list[Any], str] = (
