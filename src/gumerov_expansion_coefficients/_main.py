@@ -138,14 +138,14 @@ def _translational_coefficients_all(
     ----------
     translational_coefficients_sectorial_init : Array
         Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
-        of shape (..., ndim_harm(n_end),)
+        of shape (..., ndim_harm(2 * n_end - 1),)
     ret : Array
         Empty array to store the result of shape (..., ndim_harm(n_end), ndim_harm(n_end))
     _ : Array
         Dummy return array for numba guvectorize
 
     """
-    n_end = int(sqrt(ret.shape[-1]))
+    n_end = (int(sqrt(ret.shape[-1])) + 1) // 2
     for nd in prange(n_end):
         for md in prange(-nd, nd + 1):
             _set_coef(ret, nd, md, 0, 0, translational_coefficients_sectorial_init[idx_i(nd, md)])
@@ -166,10 +166,10 @@ def _translational_coefficients_all(
         for nd in prange(2 * n_end - n - 2):
             for md in prange(-nd, nd + 1):
                 tmp = b(nd, md) * _get_coef(ret, nd - 1, md + 1, n, m)  # 1st term
-                if abs(md + 1) <= nd - 1:
+                if abs(md + 1) <= nd + 1:
                     tmp -= b(nd + 1, -md - 1) * _get_coef(ret, nd + 1, md + 1, n, m)  # 2nd term
                 tmp /= b(n + 1, m - 1)
-                _set_coef(ret, nd, md, n + 1, m - 1, tmp)
+                _set_coef(ret, nd, md, n + 1, m - 1, tmp)  # 3rd term
 
     for m in range(2 * n_end - 2):
         n = abs(m)
@@ -177,11 +177,11 @@ def _translational_coefficients_all(
             for md in prange(-nd, nd + 1):
                 _set_coef(
                     ret,
-                    n,
-                    m,
                     nd,
                     md,
-                    minus_1_power_jit(n + nd) * _get_coef(ret, nd, md, n, m),
+                    n,
+                    m,
+                    minus_1_power_jit(n + nd) * _get_coef(ret, nd, -md, n, -m),
                     swap=True,
                 )
 
@@ -250,7 +250,9 @@ def translational_coefficients_all(
     dtype = translational_coefficients_sectorial_init.dtype
     device = translational_coefficients_sectorial_init.device
     shape = translational_coefficients_sectorial_init.shape[:-1]
-    ret = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
+    ret = xp.zeros(
+        (*shape, ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)), dtype=dtype, device=device
+    )
     (
         _translational_coefficients_all_cuda
         if "cuda" in str(device)
@@ -263,7 +265,7 @@ def translational_coefficients_all(
         ret,
         dtype=dtype,
         device=device,
-    )
+    )[: ndim_harm(n_end), : ndim_harm(n_end)]
 
 
 def translational_coefficients(

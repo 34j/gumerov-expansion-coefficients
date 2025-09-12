@@ -3,6 +3,7 @@ import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from array_api_compat import array_namespace
 from array_api_compat import numpy as np
+from array_api_negative_index import arange_asymmetric
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, idx_all
 from gumerov_expansion_coefficients._main import (
@@ -72,10 +73,12 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     r = xp.asarray(7.3484693)
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
-    n_end = 3
+    n_end = 4
+    m = arange_asymmetric(n_end, xp=xp)
     sectorial = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)[
-        :, idx(xp.arange(n_end), xp.arange(n_end))
+        :, idx(xp.abs(m), m)
     ]
+    print(sectorial[0, :])
     # assert sectorial[idx_i(1, 1), 0] == pytest.approx(0.01656551+0.05797928j)
     assert sectorial[idx_i(0, 0), 1] == pytest.approx(0.01656551 - 0.05797928j)
     assert sectorial[idx_i(0, 0), 2] == pytest.approx(0.15901178 + 0.09894066j)
