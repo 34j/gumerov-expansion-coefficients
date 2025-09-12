@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0-rc.1 (2025-09-12)
+
+### Features
+
+- Finaly worked! ([`9e6dc77`](https://github.com/34j/gumerov-expansion-coefficients/commit/9e6dc77db65668cf789001bde4f013008e256745))
+
 ## v1.1.0 (2025-08-20)
 
 ### Features
