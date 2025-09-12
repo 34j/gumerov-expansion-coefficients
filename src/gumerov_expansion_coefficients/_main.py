@@ -245,6 +245,11 @@ def translational_coefficients_all(
     -------
     Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
+
+    Notes
+    -----
+    Internally complex128 is used even if the input is complex64,
+    which means the performance for complex64 input may be poor.
     """
     xp = array_namespace(translational_coefficients_sectorial_init)
     dtype = translational_coefficients_sectorial_init.dtype
@@ -291,6 +296,11 @@ def translational_coefficients(
     -------
     Array
         Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
+
+    Notes
+    -----
+    Internally complex128 is used even if the input is complex64,
+    which means the performance for complex64 input may be poor.
     """
     translational_coefficients_sectorial_init_ = translational_coefficients_sectorial_init(
         kr, theta, phi, same, n_end
