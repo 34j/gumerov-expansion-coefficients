@@ -1,11 +1,20 @@
 # These functions are not JIT-compatible, thus we use array_api_compat.
 # (2.14)
-from array_api._2024_12 import Array
+from typing import Any
+
+from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
 from array_api_compat import numpy as np
 from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
-from gumerov_expansion_coefficients._main import idx_all
+
+def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
+    dtype = dtype or xp.int32
+    n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
+    m = xp.arange(-n_end + 1, n_end, dtype=dtype, device=device)[None, :]
+    n, m = xp.broadcast_arrays(n, m)
+    mask = n >= xp.abs(m)
+    return n[mask], m[mask]
 
 
 def R_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:

@@ -47,6 +47,19 @@ wheels = [
 ]
 
 [[package]]
+name = "array-api-negative-index"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "array-api-compat" },
+    { name = "types-array-api" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/29/69/ebd4846c11deb06e45fb3720f6f4c39be83e8d4a781f89fd3e839782f521/array_api_negative_index-1.0.0.tar.gz", hash = "sha256:e0f3c4a82b4de03b2d63d916fa26351979b34c713708e95b66f1cea7f7862d1a", size = 6700, upload-time = "2025-08-23T09:33:49.97Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/90/f6/97b52cbcd3fce6d46cc55f3dddc52700d3e1db1ada36d82456a6d59f1649/array_api_negative_index-1.0.0-py3-none-any.whl", hash = "sha256:3728ce1d24822a559dbe9a2f68c2131803877d261ce680cbe8e5865860c08f1e", size = 5466, upload-time = "2025-08-23T09:33:48.555Z" },
+]
+
+[[package]]
 name = "babel"
 version = "2.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -330,6 +343,7 @@ source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },
     { name = "array-api-extra" },
+    { name = "array-api-negative-index" },
     { name = "numba" },
     { name = "rich" },
     { name = "scipy" },
@@ -361,6 +375,7 @@ docs = [
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
+    { name = "array-api-negative-index", specifier = ">=1.0.0" },
     { name = "cm-time", marker = "extra == 'cli'", specifier = ">=0.1.2" },
     { name = "numba", specifier = ">=0.60.0" },
     { name = "pandas", marker = "extra == 'cli'", specifier = ">=2.3.1" },

@@ -1,12 +1,12 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from types import EllipsisType
-from typing import Any
 
-from array_api._2024_12 import Array, ArrayNamespace
+from array_api._2024_12 import Array
 from array_api_compat import array_namespace
+from array_api_negative_index import flip_symmetric
 from numba import prange
 
-from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all
+from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
 
 # Gumerov's notation
 # E^m_n = sum_{m'n'} (E|F)^{m' m}_{n' n} F^{m'}_{n'}
@@ -32,15 +32,6 @@ def idx(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
-
-
-def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
-    dtype = dtype or xp.int32
-    n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
-    m = xp.arange(-n_end + 1, n_end, dtype=dtype, device=device)[None, :]
-    n, m = xp.broadcast_arrays(n, m)
-    mask = n >= xp.abs(m)
-    return n[mask], m[mask]
 
 
 def ndim_harm(n_end: int, /) -> int:
@@ -194,52 +185,6 @@ def translational_coefficients_sectorial_n_m(
     return result
 
 
-def flip_symmetric_array(input: Array, /, *, axis: int = 0) -> Array:
-    """
-    Flip a symmetric array.
-
-    Parameters
-    ----------
-    input : Array
-        The input array.
-    axis : int, optional
-        The axis to flip, by default 0
-    include_zero_twice : bool, optional
-        If True, the zeroth element is included twice, by default False
-
-    Returns
-    -------
-    Array
-        The flipped array.
-        Forall a < input.shape[axis] result[-a-1] = result[a] = input[a] = input[-a-1]
-
-    """
-    xp = array_namespace(input)
-    if axis < 0:
-        zero = input[(..., slice(0, 1)) + (slice(None),) * (-axis - 1)]
-        nonzero = input[(..., slice(1, None)) + (slice(None),) * (-axis - 1)]
-    else:
-        zero = input[
-            (
-                slice(
-                    None,
-                ),
-            )
-            * axis
-            + (slice(0, 1), ...)
-        ]
-        nonzero = input[
-            (
-                slice(
-                    None,
-                ),
-            )
-            * axis
-            + (slice(1, None), ...)
-        ]
-    return xp.concat([zero, xp.flip(nonzero, axis=axis)], axis=axis)
-
-
 def translational_coefficients_sectorial_nd_md(
     *,
     n_end: int,
@@ -275,9 +220,9 @@ def translational_coefficients_sectorial_nd_md(
     # 4.61
     return (
         minus_1_power(n[:, None] + nd[None, :])
-        * flip_symmetric_array(
-            xp.moveaxis(translational_coefficients_sectorial_n_m, -1, -2), axis=-2
-        )[..., idx(nd, -md)]
+        * flip_symmetric(xp.moveaxis(translational_coefficients_sectorial_n_m, -1, -2), axis=-2)[
+            ..., idx(nd, -md)
+        ]
     )
 
 

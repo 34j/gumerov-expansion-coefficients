@@ -4,10 +4,9 @@ from array_api._2024_12 import Array, ArrayNamespaceFull
 from array_api_compat import array_namespace
 from array_api_compat import numpy as np
 
-from gumerov_expansion_coefficients._elementary_solutions import R_all
+from gumerov_expansion_coefficients._elementary_solutions import R_all, idx_all
 from gumerov_expansion_coefficients._main import (
     idx,
-    idx_all,
     idx_i,
     minus_1_power,
     ndim_harm,
