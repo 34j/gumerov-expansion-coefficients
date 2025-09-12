@@ -119,117 +119,24 @@ def translational_coefficients_sectorial_init(
         )
 
 
-def translational_coefficients_sectorial_n_m(
-    *,
-    n_end: int,
-    translational_coefficients_sectorial_init: Array,
-) -> Array:
-    """Sectorial translational coefficients (E|F)^{m',m}_{n',n=|m|}
-
-    Parameters
-    ----------
-    n_end : int
-        Maximum degree of spherical harmonics.
-    translational_coefficients_sectorial_init : Array
-        Initial sectorial translational coefficients of shape (..., ndim_harm(n_end),)
-
-    Returns
-    -------
-    Array
-        Sectorial translational coefficients [(m',n'),m]
-        of shape (..., ndim_harm(n_end), 2*n_end-1).
-        While the array shape is redundant, we give up further optimization
-        because the batched axis in calculation (first) and used axis (last) are different.
-    """
-    xp = array_namespace(translational_coefficients_sectorial_init)
-    shape = translational_coefficients_sectorial_init.shape[:-1]
-    dtype = translational_coefficients_sectorial_init.dtype
-    device = translational_coefficients_sectorial_init.device
-    result = xp.zeros((*shape, ndim_harm(2 * n_end - 1), 4 * n_end - 1), dtype=dtype, device=device)
-    result[..., :, 0] = translational_coefficients_sectorial_init
-    if dtype == xp.complex64:
-        dtype = xp.float32
-    elif dtype == xp.complex128:
-        dtype = xp.float64
-    # 4.67
-    for m in range(2 * n_end - 2):
-        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp, dtype=xp.int32, device=device)
-        result[..., idx(nd, md), m + 1] = (
-            1
-            / b(
-                xp.asarray(m + 1, dtype=dtype, device=device),
-                xp.asarray(-m - 1, dtype=dtype, device=device),
-            )
-            * (
-                b(nd, -md) * getitem_outer_zero(result, (..., idx(nd - 1, md - 1), m), axis=-2)
-                - b(nd + 1, md - 1)
-                * getitem_outer_zero(result, (..., idx(nd + 1, md - 1), m), axis=-2)
-            )
-        )
-    # 4.68
-    for m in range(2 * n_end - 2):
-        nd, md = idx_all(2 * n_end - abs(m) - 2, xp=xp, dtype=xp.int32, device=device)
-        result[..., idx(nd, md), -m - 1] = (
-            1
-            / b(
-                xp.asarray(m + 1, dtype=dtype, device=device),
-                xp.asarray(-m - 1, dtype=dtype, device=device),
-            )
-            * (
-                b(nd, md) * getitem_outer_zero(result, (..., idx(nd - 1, md + 1), -m), axis=-2)
-                - b(nd + 1, -md - 1)
-                * getitem_outer_zero(result, (..., idx(nd + 1, md + 1), -m), axis=-2)
-            )
-        )
-    return result
-
-
-def translational_coefficients_sectorial_nd_md(
-    *,
-    n_end: int,
-    translational_coefficients_sectorial_n_m: Array,
-) -> Array:
-    """Sectorial translational coefficients (E|F)^{m',m}_{n'=|m'|,n}
-
-    Parameters
-    ----------
-    n_end : int
-        Maximum degree of spherical harmonics.
-    translational_coefficients_sectorial_n_m : Array
-        Initial sectorial translational coefficients of shape (..., ndim_harm(n_end), 2*n_end-1)
-
-    Returns
-    -------
-    Array
-        Sectorial translational coefficients [m',(m,n)] of shape (..., 2*n_end-1, ndim_harm(n_end)).
-        While the array shape is redundant, we give up further optimization
-        because the batched axis in calculation (first) and used axis (last) are different.
-    """
-    xp = array_namespace(translational_coefficients_sectorial_n_m)
-    device = translational_coefficients_sectorial_n_m.device
-    m = xp.concat(
-        (
-            xp.arange(2 * n_end, dtype=xp.int32, device=device),
-            xp.arange(-2 * n_end + 1, 0, dtype=xp.int32, device=device),
-        ),
-        axis=0,
-    )
-    n = xp.abs(m)
-    nd, md = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=device)
-    # 4.61
-    return (
-        minus_1_power(n[:, None] + nd[None, :])
-        * flip_symmetric(xp.moveaxis(translational_coefficients_sectorial_n_m, -1, -2), axis=-2)[
-            ..., idx(nd, -md)
-        ]
-    )
+def _set_coef(a: Array, nd: int, md: int, n: int, m: int, value: float, *, swap: bool = False) -> None:
+    if swap:
+        a[idx_i(n, m), idx_i(nd, md)] = value
+    else:
+        a[idx_i(nd, md), idx_i(n, m)] = value
+    
+def _get_coef(a: Array, nd: int, md: int, n: int, m: int, *, swap: bool = False) -> float:
+    if swap:
+        return a[idx_i(n, m), idx_i(nd, md)]
+    else:
+        return a[idx_i(nd, md), idx_i(n, m)]
 
 
 def _translational_coefficients_all(
     *,
     n_end: int,
     translational_coefficients_sectorial_init: Array,
-    result: Array,
+    ret: Array,
 ) -> None:
     """Translational coefficients (E|F)^{m',m}_{n',n}
 
@@ -243,22 +150,42 @@ def _translational_coefficients_all(
     result : Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
+    for nd in prange(n_end):
+        for md in prange(-nd, nd + 1):
+            _set_coef(ret, nd, md, 0, 0, translational_coefficients_sectorial_init[idx_i(nd, md)])
+
+    for m in range(2*n_end - 2):
+        n = abs(m)
+        for nd in prange(2 * n_end - n - 2):
+            for md in prange(-nd, nd + 1):
+                tmp = -b(nd + 1, md - 1) * _get_coef(ret, nd + 1, md - 1, n, m) # 3rd term
+                if abs(md - 1) <= nd - 1:
+                    tmp += b(nd, -md) * _get_coef(ret, nd - 1, md - 1, n, m) # 4th term
+                tmp /= b(n + 1, -m - 1)
+                _set_coef(ret, nd, md, n + 1, m + 1, tmp) # 2nd term
+
+    for m in range(2*n_end - 2):
+        m = -m
+        n = abs(m)
+        for nd in prange(2 * n_end - n - 2):
+            for md in prange(-nd, nd + 1):
+                tmp = b(nd, md) * _get_coef(ret, nd - 1, md + 1, n, m) # 1st term
+                if abs(md + 1) <= nd - 1:
+                    tmp -= b(nd + 1, -md - 1) * _get_coef(ret, nd + 1, md + 1, n, m) # 2nd term
+                tmp /= b(n + 1, m - 1)
+                _set_coef(ret, nd, md, n + 1, m - 1, tmp)
+
+    for m in range(2*n_end - 2):
+        n = abs(m)
+        for nd in prange(2 * n_end - n - 2):
+            for md in prange(-nd, nd + 1):
+                _set_coef(ret, n, m, nd, md, minus_1_power(n + nd) * _get_coef(ret, nd, md, n, m), swap=True)
 
     for m in prange(-n_end + 1, n_end):
         for md in prange(-n_end + 1, n_end):
             mabs, mdabs = abs(m), abs(md)
             mlarger = max(mabs, mdabs)
             n_iter = n_end - mlarger - 1
-
-            # init
-            for n in prange(mabs, 2 * n_end - mlarger + 1):
-                result[idx_i(abs(md), md), idx_i(n, m)] = (
-                    translational_coefficients_sectorial_md_nd[md, idx_i(n, m)]
-                )
-            for nd in prange(mdabs, 2 * n_end - mlarger + 1):
-                result[idx_i(nd, md), idx_i(abs(m), m)] = translational_coefficients_sectorial_m_n[
-                    idx_i(nd, md), m
-                ]
 
             for m1_is_md, m1, m2 in ((True, md, m), (False, m, md)):
                 del m, md
@@ -269,25 +196,17 @@ def _translational_coefficients_all(
                         n2 = i + m2abs
                         tmp = (
                             -a(n1, m1)
-                            * result[
-                                (idx_i(n1 + 1, m1), n2) if m1_is_md else (n2, idx_i(n1 + 1, m1))
-                            ]  # 3rd
+                            * _get_coef(ret, n1 + 1, m1, n2, m2, swap=m1_is_md) # 3rd
                             + a(n1 - 1, m1)
-                            * result[
-                                (idx_i(n1 - 1, m1), n2) if m1_is_md else (n2, idx_i(n1 - 1, m1))
-                            ]  # 4th
+                            * _get_coef(ret, n1 - 1, m1, n2, m2, swap=m1_is_md)  # 4th
                         )
                         if i > 0:
                             tmp += (
                                 a(n2 - 1, m2)
-                                * result[
-                                    (idx_i(n1, m1), n2 - 1) if m1_is_md else (n2 - 1, idx_i(n1, m1))
-                                ]
+                                * _get_coef(ret, n1, m1, n2 - 1, m2, swap=m1_is_md)  # 1st
                             )  # 1st
-                        result[(idx_i(n1, m1), n2 + 1) if m1_is_md else (n2 + 1, idx_i(n1, m1))] = (
-                            tmp / a(n2, m2)
-                        )
-    return result
+                        _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
+    return ret
 
 
 def translational_coefficients_all(
@@ -324,7 +243,7 @@ def translational_coefficients_all(
             n_end=n_end,
             translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n,
             translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd,
-            result=result,
+            ret=result,
         ),
         dtype=dtype,
         device=device,
