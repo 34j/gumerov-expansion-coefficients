@@ -1,104 +1,12 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from types import EllipsisType
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from array_api._2024_12 import Array, ArrayNamespace
-from array_api_compat import array_namespace, to_device
-from array_api_compat import numpy as np
-from array_api_jit import jit as jit_raw
-from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
+from array_api_compat import array_namespace
+from numba import prange
 
-prange = range
-P = ParamSpec("P")
-T = TypeVar("T")
-
-jit = jit_raw(fail_on_error=True)
-# {"numpy": numba.jit(nopython=True, nogil=True)})  # {"torch": lambda x: x})
-pjit = jit_raw(
-    fail_on_error=True
-    # {"numpy": numba.jit(parallel=True, nopython=True, nogil=True)}
-)  # {"torch": lambda x: x})
-
-
-jit = lambda x: x  # noqa
-pjit = lambda x: x  # noqa
-
-
-# (2.14)
-def R_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
-    """Regular elementary solution of 3D Helmholtz equation.
-
-    Parameters
-    ----------
-    kr : Array
-        k * r of shape (...,)
-    theta : Array
-        polar angle of shape (...,)
-    phi : Array
-        azimuthal angle of shape (...,)
-    n_end : int
-        Maximum degree of spherical harmonics.
-
-    Returns
-    -------
-    Array
-        Regular elementary solution of 3D Helmholtz equation of shape (..., ndim_harm(n_end),)
-    """
-    xp = array_namespace(kr, theta, phi)
-    device = kr.device
-    dtype = kr.dtype
-    if dtype == xp.float32:
-        dtype = xp.complex64
-    elif dtype == xp.float64:
-        dtype = xp.complex128
-    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
-    kr = to_device(kr, "cpu")
-    theta = to_device(theta, "cpu")
-    phi = to_device(phi, "cpu")
-    return xp.asarray(
-        spherical_jn(n, kr[..., None])
-        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
-        dtype=dtype,
-        device=device,
-    )
-
-
-def S_all(kr: Array, theta: Array, phi: Array, *, n_end: int) -> Array:
-    """Singular elementary solution of 3D Helmholtz equation.
-
-    Parameters
-    ----------
-    kr : Array
-        k * r of shape (...,)
-    theta : Array
-        polar angle of shape (...,)
-    phi : Array
-        azimuthal angle of shape (...,)
-    n_end : int
-        Maximum degree of spherical harmonics.
-
-    Returns
-    -------
-    Array
-        Singular elementary solution of 3D Helmholtz equation of shape (..., ndim_harm(n_end),)"""
-    xp = array_namespace(kr, theta, phi)
-    device = kr.device
-    dtype = kr.dtype
-    if dtype == xp.float32:
-        dtype = xp.complex64
-    elif dtype == xp.float64:
-        dtype = xp.complex128
-    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
-    kr = to_device(kr, "cpu")
-    theta = to_device(theta, "cpu")
-    phi = to_device(phi, "cpu")
-    return xp.asarray(
-        (spherical_jn(n, kr[..., None]) + 1j * spherical_yn(n, kr[..., None]))
-        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
-        dtype=dtype,
-        device=device,
-    )
-
+from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all
 
 # Gumerov's notation
 # E^m_n = sum_{m'n'} (E|F)^{m' m}_{n' n} F^{m'}_{n'}
@@ -116,7 +24,6 @@ def idx_i(n: int, m: int, /) -> int:
     return n * (n + 1) + m
 
 
-@jit
 def idx(n: Array, m: Array, /) -> Array:
     """Index for the coefficients."""
     # (0, 0) -> 0
@@ -127,7 +34,6 @@ def idx(n: Array, m: Array, /) -> Array:
     return xp.where(m_abs > n, -1, n * (n + 1) + m)
 
 
-@jit
 def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
     dtype = dtype or xp.int32
     n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
@@ -137,18 +43,15 @@ def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple
     return n[mask], m[mask]
 
 
-@jit
 def ndim_harm(n_end: int, /) -> int:
     """Number of spherical harmonics which degree is less than n_end."""
     return n_end**2
 
 
-@jit
 def minus_1_power(x: Array, /) -> Array:
     return 1 - 2 * (x % 2)
 
 
-@jit
 def a(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
@@ -159,7 +62,6 @@ def a(n: Array, m: Array, /) -> Array:
     )
 
 
-@jit
 def b(n: Array, m: Array, /) -> Array:
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
@@ -170,7 +72,6 @@ def b(n: Array, m: Array, /) -> Array:
     )
 
 
-@jit
 def getitem_outer_zero(
     array: Array,
     indices: tuple[int | slice | EllipsisType | Array | None, ...],
@@ -228,7 +129,6 @@ def translational_coefficients_sectorial_init(
         )
 
 
-@jit
 def translational_coefficients_sectorial_n_m(
     *,
     n_end: int,
@@ -381,7 +281,6 @@ def translational_coefficients_sectorial_nd_md(
     )
 
 
-@jit
 def translational_coefficients_iter(
     *,
     m: int,
@@ -440,7 +339,6 @@ def translational_coefficients_iter(
     return md_m_fixed[..., : n_end - abs(md), : n_end - abs(m)]
 
 
-@pjit
 def translational_coefficients_all(
     *,
     n_end: int,
