@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 
 [[package]]
@@ -44,18 +44,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/40/86/4a0a306877d2bbee20f564ebbc0fa3550db3ac411620bbb1ff07de019495/array_api_extra-0.8.0.tar.gz", hash = "sha256:1358c2111768317acf7ae5e397d04ed321ccc1f0c1d7a42347b0fba69f0bdf4e", size = 148171, upload-time = "2025-06-03T15:48:43.96Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bc/da/693816d1b09287c95425846b9009daf70968e72aaadf65ccb6b79a2b1626/array_api_extra-0.8.0-py3-none-any.whl", hash = "sha256:6833bbd9aa6b5d6ead44a4dddceed54f9320510f94e30aef8524b198ae2870d8", size = 46495, upload-time = "2025-06-03T15:48:41.549Z" },
-]
-
-[[package]]
-name = "array-api-jit"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "array-api-compat" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/95/5bddfb7e45188c8e3ad8a1c7ebfae0f5f230cbf26539d171a63bd728e9ae/array_api_jit-1.0.0.tar.gz", hash = "sha256:a896153e17357f87c31f3fe24303917efe5ade8d61d901760fb12faf40889e93", size = 8956, upload-time = "2025-07-14T01:22:35.26Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/da/7dda387073f2044e7e35327cbd89c77ae8e1546d85914a1058b5ca371d23/array_api_jit-1.0.0-py3-none-any.whl", hash = "sha256:a60dddcae6ed7f523b0d3cfcbfe3a850d75ec02f07c99ca96869e0ff27027ce9", size = 5893, upload-time = "2025-07-14T01:22:33.759Z" },
 ]
 
 [[package]]
@@ -342,7 +330,6 @@ source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },
     { name = "array-api-extra" },
-    { name = "array-api-jit" },
     { name = "numba" },
     { name = "rich" },
     { name = "scipy" },
@@ -374,7 +361,6 @@ docs = [
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
-    { name = "array-api-jit", specifier = ">=0.0.0" },
     { name = "cm-time", marker = "extra == 'cli'", specifier = ">=0.1.2" },
     { name = "numba", specifier = ">=0.60.0" },
     { name = "pandas", marker = "extra == 'cli'", specifier = ">=2.3.1" },
