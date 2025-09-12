@@ -78,7 +78,6 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     sectorial = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)[
         :, idx(xp.abs(m), m)
     ]
-    print(sectorial[0, :])
     # assert sectorial[idx_i(1, 1), 0] == pytest.approx(0.01656551+0.05797928j)
     assert sectorial[idx_i(0, 0), 1] == pytest.approx(0.01656551 - 0.05797928j)
     assert sectorial[idx_i(0, 0), 2] == pytest.approx(0.15901178 + 0.09894066j)
@@ -101,10 +100,8 @@ def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
     phi = xp.asarray(-1.2924967)
     n_end = 2
     t = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)
-    sectorial_n_m = t[:, idx(xp.arange(n_end), xp.arange(n_end))]
-    sectorial_nd_md = t[idx(xp.arange(n_end), xp.arange(n_end)), :]
-    assert sectorial_nd_md[1, idx_i(1, 0)] == sectorial_n_m[idx_i(1, 0), -1]
-    assert sectorial_nd_md[1, idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
+    assert t[idx_i(1, 1), idx_i(1, 0)] == t[idx_i(1, 0), idx_i(1, -1)]
+    assert t[idx_i(1, 1), idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
 
 
 def test_main(xp: ArrayNamespaceFull) -> None:

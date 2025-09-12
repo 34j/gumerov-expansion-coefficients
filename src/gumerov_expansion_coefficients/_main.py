@@ -146,7 +146,7 @@ def _translational_coefficients_all(
 
     """
     n_end = (int(sqrt(ret.shape[-1])) + 1) // 2
-    for nd in prange(n_end):
+    for nd in prange(2 * n_end - 1):
         for md in prange(-nd, nd + 1):
             _set_coef(ret, nd, md, 0, 0, translational_coefficients_sectorial_init[idx_i(nd, md)])
 
@@ -171,9 +171,9 @@ def _translational_coefficients_all(
                 tmp /= b(n + 1, m - 1)
                 _set_coef(ret, nd, md, n + 1, m - 1, tmp)  # 3rd term
 
-    for m in range(2 * n_end - 2):
+    for m in range(2 * n_end - 1):
         n = abs(m)
-        for nd in prange(2 * n_end - n - 2):
+        for nd in prange(2 * n_end - 1):
             for md in prange(-nd, nd + 1):
                 _set_coef(
                     ret,
