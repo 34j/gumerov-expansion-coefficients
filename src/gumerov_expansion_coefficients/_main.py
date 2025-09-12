@@ -1,4 +1,5 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
+from math import sqrt
 from types import EllipsisType
 from typing import Any
 
@@ -6,7 +7,7 @@ import numba
 import numpy as np
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from numba import prange
+from numba import complex64, complex128, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
@@ -138,17 +139,12 @@ def _get_coef(a: Array, nd: int, md: int, n: int, m: int, *, swap: bool = False)
 
 
 def _translational_coefficients_all(
-    *,
-    n_end: int,
-    translational_coefficients_sectorial_init: Array,
-    ret: Array,
+    translational_coefficients_sectorial_init: Array, ret: Array, _: Array
 ) -> Array:
     """Translational coefficients (E|F)^{m',m}_{n',n}
 
     Parameters
     ----------
-    n_end : int
-        Maximum degree of spherical harmonics.
     translational_coefficients_sectorial_init : Array
         Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
         of shape (..., ndim_harm(n_end),)
@@ -160,6 +156,7 @@ def _translational_coefficients_all(
     Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
+    n_end = int(sqrt(ret.shape[-1]))
     for nd in prange(n_end):
         for md in prange(-nd, nd + 1):
             _set_coef(ret, nd, md, 0, 0, translational_coefficients_sectorial_init[idx_i(nd, md)])
@@ -227,8 +224,8 @@ def _translational_coefficients_all(
 
 
 _numba_args: tuple[list[Any], str] = (
-    [],
-    "(),(),(),(n)->()",
+    [(complex64[:], complex64[:, :], complex64), (complex128[:], complex128[:, :], complex128)],
+    "(n),(n,n)->()",
 )
 _translational_coefficients_all_parallel = numba.guvectorize(
     *_numba_args, target="parallel", fastmath=True, cache=True
@@ -236,7 +233,8 @@ _translational_coefficients_all_parallel = numba.guvectorize(
 
 try:
     _translational_coefficients_all_cuda = numba.guvectorize(
-        *_numba_args, target="cuda", cache=True
+        *_numba_args,
+        target="cuda",
     )(_translational_coefficients_all)
 except CudaSupportError:
     _translational_coefficients_all_cuda = None
@@ -251,8 +249,6 @@ def translational_coefficients_all(
 
     Parameters
     ----------
-    n_end : int
-        Maximum degree of spherical harmonics.
     translational_coefficients_sectorial_init : Array
         Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
         of shape (..., ndim_harm(n_end),)
@@ -267,16 +263,16 @@ def translational_coefficients_all(
     device = translational_coefficients_sectorial_init.device
     shape = translational_coefficients_sectorial_init.shape[:-1]
     ret = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
+    (
+        _translational_coefficients_all_cuda
+        if "cuda" in str(device)
+        else _translational_coefficients_all_parallel
+    )(
+        translational_coefficients_sectorial_init,
+        ret,
+    )
     return xp.asarray(
-        (
-            _translational_coefficients_all_cuda
-            if "cuda" in str(device)
-            else _translational_coefficients_all_parallel
-        )(
-            n_end=n_end,
-            translational_coefficients_sectorial_init=translational_coefficients_sectorial_init,
-            ret=ret,
-        ),
+        ret,
         dtype=dtype,
         device=device,
     )
