@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 
 [[package]]
@@ -47,15 +47,16 @@ wheels = [
 ]
 
 [[package]]
-name = "array-api-jit"
+name = "array-api-negative-index"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "array-api-compat" },
+    { name = "types-array-api" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e7/95/5bddfb7e45188c8e3ad8a1c7ebfae0f5f230cbf26539d171a63bd728e9ae/array_api_jit-1.0.0.tar.gz", hash = "sha256:a896153e17357f87c31f3fe24303917efe5ade8d61d901760fb12faf40889e93", size = 8956, upload-time = "2025-07-14T01:22:35.26Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/69/ebd4846c11deb06e45fb3720f6f4c39be83e8d4a781f89fd3e839782f521/array_api_negative_index-1.0.0.tar.gz", hash = "sha256:e0f3c4a82b4de03b2d63d916fa26351979b34c713708e95b66f1cea7f7862d1a", size = 6700, upload-time = "2025-08-23T09:33:49.97Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/da/7dda387073f2044e7e35327cbd89c77ae8e1546d85914a1058b5ca371d23/array_api_jit-1.0.0-py3-none-any.whl", hash = "sha256:a60dddcae6ed7f523b0d3cfcbfe3a850d75ec02f07c99ca96869e0ff27027ce9", size = 5893, upload-time = "2025-07-14T01:22:33.759Z" },
+    { url = "https://files.pythonhosted.org/packages/90/f6/97b52cbcd3fce6d46cc55f3dddc52700d3e1db1ada36d82456a6d59f1649/array_api_negative_index-1.0.0-py3-none-any.whl", hash = "sha256:3728ce1d24822a559dbe9a2f68c2131803877d261ce680cbe8e5865860c08f1e", size = 5466, upload-time = "2025-08-23T09:33:48.555Z" },
 ]
 
 [[package]]
@@ -342,7 +343,7 @@ source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },
     { name = "array-api-extra" },
-    { name = "array-api-jit" },
+    { name = "array-api-negative-index" },
     { name = "numba" },
     { name = "rich" },
     { name = "scipy" },
@@ -374,7 +375,7 @@ docs = [
 requires-dist = [
     { name = "array-api-compat", specifier = ">=1.11.2" },
     { name = "array-api-extra", specifier = ">=0.1.1" },
-    { name = "array-api-jit", specifier = ">=0.0.0" },
+    { name = "array-api-negative-index", specifier = ">=1.0.0" },
     { name = "cm-time", marker = "extra == 'cli'", specifier = ">=0.1.2" },
     { name = "numba", specifier = ">=0.60.0" },
     { name = "pandas", marker = "extra == 'cli'", specifier = ">=2.3.1" },

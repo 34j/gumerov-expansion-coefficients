@@ -25,7 +25,7 @@ def benchmark() -> None:
             ("numpy", numpy),
             # ("jax", jnp),
         ]:
-            for device in ["cuda", "cpu"]:
+            for device in ["cpu"]:
                 if name == "numpy" and device == "cuda":
                     continue
                 for dtype in [
