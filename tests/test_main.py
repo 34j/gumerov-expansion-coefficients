@@ -529,7 +529,13 @@ def test_main_all(xp: ArrayNamespaceFull, same: bool) -> None:
     n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=None)
     expected = expected[n, m, ...][:, n, m]
     expected = xp.moveaxis(expected, 0, -1)
-    print(coefs, expected)
+    # print(coefs, expected)
+    # from io import StringIO
+    # with StringIO() as f:
+    #     xp.savetxt(f, xp.abs(coefs) > 1e-6, fmt="%d")
+    #     xp.savetxt(f, xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6), fmt="%d")
+    #     print(f.getvalue())
+    # print(xp.nonzero(~xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6)))
     assert xp.all(xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6))
 
 

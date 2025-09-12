@@ -171,7 +171,7 @@ def _translational_coefficients_all(
                 tmp /= b(n + 1, m - 1)
                 _set_coef(ret, nd, md, n + 1, m - 1, tmp)  # 3rd term
 
-    for m in range(2 * n_end - 1):
+    for m in prange(-2 * n_end + 2, 2 * n_end - 1):
         n = abs(m)
         for nd in prange(2 * n_end - 1):
             for md in prange(-nd, nd + 1):
@@ -196,8 +196,8 @@ def _translational_coefficients_all(
                 m1abs = abs(m1)
                 m2abs = abs(m2)
                 for i in range(n_iter):
-                    for n1 in prange(m1abs + i + 1, 2 * n_end - mlarger - i - 2):
-                        n2 = i + m2abs
+                    n2 = i + m2abs  # n
+                    for n1 in prange(m1abs + i + 1, 2 * n_end - mlarger - i - 2):  # nd
                         tmp = (
                             -a(n1, m1) * _get_coef(ret, n1 + 1, m1, n2, m2, swap=m1_is_md)  # 3rd
                             + a(n1 - 1, m1)
