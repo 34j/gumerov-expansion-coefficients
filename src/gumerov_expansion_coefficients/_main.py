@@ -137,7 +137,7 @@ def _translational_coefficients_all(
     n_end: int,
     translational_coefficients_sectorial_init: Array,
     ret: Array,
-) -> None:
+) -> Array:
     """Translational coefficients (E|F)^{m',m}_{n',n}
 
     Parameters
@@ -147,7 +147,12 @@ def _translational_coefficients_all(
     translational_coefficients_sectorial_init : Array
         Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
         of shape (..., ndim_harm(n_end),)
-    result : Array
+    ret : Array
+        Empty array to store the result of shape (..., ndim_harm(n_end), ndim_harm(n_end))
+
+    Returns
+    -------
+    Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
     for nd in prange(n_end):
@@ -212,8 +217,7 @@ def _translational_coefficients_all(
 def translational_coefficients_all(
     *,
     n_end: int,
-    translational_coefficients_sectorial_m_n: Array,
-    translational_coefficients_sectorial_md_nd: Array,
+    translational_coefficients_sectorial_init: Array,
 ) -> Array:
     """Translational coefficients (E|F)^{m',m}_{n',n}
 
@@ -221,29 +225,25 @@ def translational_coefficients_all(
     ----------
     n_end : int
         Maximum degree of spherical harmonics.
-    translational_coefficients_sectorial_m_n : Array
-        Sectorial translational coefficients [(m',n'),m] of shape (ndim_harm(n_end), 2*n_end-1)
-    translational_coefficients_sectorial_md_nd : Array
-        Sectorial translational coefficients [m',(m,n)] of shape (2*n_end-1, ndim_harm(n_end))
+    translational_coefficients_sectorial_init : Array
+        Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
+        of shape (..., ndim_harm(n_end),)
 
     Returns
     -------
     Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
     """
-    xp = array_namespace(
-        translational_coefficients_sectorial_m_n, translational_coefficients_sectorial_md_nd
-    )
-    dtype = translational_coefficients_sectorial_m_n.dtype
-    device = translational_coefficients_sectorial_m_n.device
-    shape = translational_coefficients_sectorial_m_n.shape[:-2]
-    result = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
+    xp = array_namespace(translational_coefficients_sectorial_init)
+    dtype = translational_coefficients_sectorial_init.dtype
+    device = translational_coefficients_sectorial_init.device
+    shape = translational_coefficients_sectorial_init.shape[:-1]
+    ret = xp.zeros((*shape, ndim_harm(n_end), ndim_harm(n_end)), dtype=dtype, device=device)
     return xp.asarray(
         _translational_coefficients_all(
             n_end=n_end,
-            translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_m_n,
-            translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_md_nd,
-            ret=result,
+            translational_coefficients_sectorial_init=translational_coefficients_sectorial_init,
+            ret=ret,
         ),
         dtype=dtype,
         device=device,
@@ -277,16 +277,7 @@ def translational_coefficients(
     translational_coefficients_sectorial_init_ = translational_coefficients_sectorial_init(
         kr, theta, phi, same, n_end
     )
-    translational_coefficients_sectorial_n_m_ = translational_coefficients_sectorial_n_m(
-        n_end=n_end,
-        translational_coefficients_sectorial_init=translational_coefficients_sectorial_init_,
-    )
-    translational_coefficients_sectorial_nd_md_ = translational_coefficients_sectorial_nd_md(
-        n_end=n_end,
-        translational_coefficients_sectorial_n_m=translational_coefficients_sectorial_n_m_,
-    )
     return translational_coefficients_all(
         n_end=n_end,
-        translational_coefficients_sectorial_m_n=translational_coefficients_sectorial_n_m_,
-        translational_coefficients_sectorial_md_nd=translational_coefficients_sectorial_nd_md_,
+        translational_coefficients_sectorial_init=translational_coefficients_sectorial_init_,
     )
