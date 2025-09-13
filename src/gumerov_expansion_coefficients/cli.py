@@ -4,8 +4,9 @@ from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import typer
-from array_api_compat import numpy, torch
+from array_api_compat import torch
 from cm_time import timer
+from numba import threading_layer
 from rich import print
 
 from gumerov_expansion_coefficients import translational_coefficients
@@ -14,49 +15,51 @@ app = typer.Typer()
 
 
 @app.command()
-def benchmark() -> None:
+def benchmark(devices: str = "cuda,cpu", dtypes: str = "float32", n_loops: int = 3) -> None:
     with Path("timing_results.csv").open("w") as f:
+        print(f"Threading layer chosen: {threading_layer()}")
         writer = csv.DictWriter(
             f, fieldnames=["backend", "device", "dtype", "size", "n_end", "time"]
         )
         writer.writeheader()
         for name, xp in [
             ("torch", torch),
-            ("numpy", numpy),
+            # ("numpy", numpy),
             # ("jax", jnp),
         ]:
-            for device in ["cpu"]:
+            for device in devices.split(","):
                 if name == "numpy" and device == "cuda":
                     continue
-                for dtype in [
-                    xp.float32,
-                    # xp.float64
-                ]:
+                for dtype in [getattr(xp, dtype_str) for dtype_str in dtypes.split(",")]:
                     try:
-                        for size in 4 ** xp.arange(1, 7):
-                            for n_end in range(2, 15, 2):
+                        for size in 4 ** xp.arange(0, 5):
+                            for n_end in range(2, 21, 2):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
                                 phi = xp.arange(size, dtype=dtype, device=device)
-                                for _ in range(2):
+                                for i in range(1 + n_loops):
                                     with timer() as t:
-                                        translational_coefficients(
+                                        coef = translational_coefficients(
                                             kr=kr,
                                             theta=theta,
                                             phi=phi,
                                             same=False,
                                             n_end=n_end,
                                         )
-                                result = {
-                                    "backend": name,
-                                    "device": device,
-                                    "dtype": str(dtype).split(".")[-1].split("'")[0],
-                                    "size": int(size),
-                                    "n_end": n_end,
-                                    "time": t.elapsed,
-                                }
-                                writer.writerow(result)
-                                print(result)
+                                        str(coef[0, 0])
+                                        del coef
+                                    if i == 0:
+                                        continue
+                                    result = {
+                                        "backend": name,
+                                        "device": device,
+                                        "dtype": str(dtype).split(".")[-1].split("'")[0],
+                                        "size": int(size),
+                                        "n_end": n_end,
+                                        "time": t.elapsed,
+                                    }
+                                    writer.writerow(result)
+                                    print(result)
                     except Exception as e:
                         raise e
 
