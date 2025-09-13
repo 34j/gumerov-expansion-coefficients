@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 import seaborn as sns
+import torch as torch_original
 import typer
 from array_api_compat import torch
 from cm_time import timer
@@ -13,9 +14,20 @@ from gumerov_expansion_coefficients import translational_coefficients
 
 app = typer.Typer()
 
+# estimated memory: 4 byte  * size * (2 * n_end) ** 4
+
+
+def _max_n_end(memory_bytes: int, size: int, is_single: bool) -> int:
+    return int((memory_bytes / ((2 if is_single else 4) * size)) ** 0.25 / 2)
+
 
 @app.command()
-def benchmark(devices: str = "cuda,cpu", dtypes: str = "float32", n_loops: int = 3) -> None:
+def benchmark(
+    devices: str = "cuda,cpu",
+    dtypes: str = "float32,float64",
+    n_loops: int = 3,
+    max_memory_gb: int = 1,
+) -> None:
     with Path("timing_results.csv").open("w") as f:
         print(f"Threading layer chosen: {threading_layer()}")
         writer = csv.DictWriter(
@@ -24,16 +36,23 @@ def benchmark(devices: str = "cuda,cpu", dtypes: str = "float32", n_loops: int =
         writer.writeheader()
         for name, xp in [
             ("torch", torch),
-            # ("numpy", numpy),
-            # ("jax", jnp),
         ]:
             for device in devices.split(","):
                 if name == "numpy" and device == "cuda":
                     continue
                 for dtype in [getattr(xp, dtype_str) for dtype_str in dtypes.split(",")]:
                     try:
-                        for size in 4 ** xp.arange(0, 5):
-                            for n_end in range(2, 21, 2):
+                        for size in 4 ** xp.arange(0, 6):
+                            for n_end in range(
+                                2,
+                                min(
+                                    25,
+                                    _max_n_end(
+                                        max_memory_gb * 1024 * 1024 * 1024, size, dtype == "float32"
+                                    ),
+                                ),
+                                2,
+                            ):
                                 kr = xp.arange(size, dtype=dtype, device=device)
                                 theta = xp.arange(size, dtype=dtype, device=device)
                                 phi = xp.arange(size, dtype=dtype, device=device)
@@ -60,6 +79,7 @@ def benchmark(devices: str = "cuda,cpu", dtypes: str = "float32", n_loops: int =
                                     }
                                     writer.writerow(result)
                                     print(result)
+                                torch_original.cuda.empty_cache()
                     except Exception as e:
                         raise e
 

@@ -5,7 +5,7 @@ from typing import Any
 import numba
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from numba import complex64, complex128, float32, jit, prange
+from numba import complex64, complex128, float32, float64, jit, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
@@ -48,26 +48,6 @@ def minus_1_power(x: Array, /) -> Array:
 
 
 minus_1_power_jit = jit(inline="always")(minus_1_power)
-
-
-@jit()
-def a(n: int, m: int, /) -> float:
-    m_abs = abs(m)
-    if m_abs > n:
-        return float32(0)
-    return sqrt(float32((n + m_abs + 1) * (n - m_abs + 1)) / float32((2 * n + 1) * (2 * n + 3)))
-
-
-@jit()
-def b(n: int, m: int, /) -> float:
-    m_abs = abs(m)
-    if m_abs > n:
-        return float32(0)
-    tmp = sqrt(float32((n - m - 1) * (n - m)) / float32((2 * n - 1) * (2 * n + 1)))
-    if m >= 0:
-        return tmp
-    else:
-        return -tmp
 
 
 def translational_coefficients_sectorial_init(
@@ -211,21 +191,43 @@ def _translational_coefficients_all(
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
 
 
-_numba_args: tuple[list[Any], str] = (
-    [(complex64[:], complex64[:, :], complex64), (complex128[:], complex128[:, :], complex128)],
-    "(n),(n,n)->()",
-)
-_translational_coefficients_all_parallel = numba.guvectorize(
-    *_numba_args, target="parallel", fastmath=True, cache=True
-)(_translational_coefficients_all)
+_translational_coefficients_all_impl = {}
 
-try:
-    _translational_coefficients_all_cuda = numba.guvectorize(
-        *_numba_args,
-        target="cuda",
+for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
+
+    @jit()
+    def a(n: int, m: int, /) -> float:
+        m_abs = abs(m)
+        if m_abs > n:
+            return dtype_f(0)  # noqa: B023
+        return sqrt(dtype_f((n + m_abs + 1) * (n - m_abs + 1)) / dtype_f((2 * n + 1) * (2 * n + 3)))  # noqa: B023
+
+    @jit()
+    def b(n: int, m: int, /) -> float:
+        m_abs = abs(m)
+        if m_abs > n:
+            return dtype_f(0)  # noqa: B023
+        tmp = sqrt(dtype_f((n - m - 1) * (n - m)) / dtype_f((2 * n - 1) * (2 * n + 1)))  # noqa: B023
+        if m >= 0:
+            return tmp
+        else:
+            return -tmp
+
+    _numba_args: tuple[list[Any], str] = (
+        [(dtype_c[:], dtype_c[:, :], dtype_c)],
+        "(n),(n,n)->()",
+    )
+    _translational_coefficients_all_impl[("parallel", dtype_c)] = numba.guvectorize(
+        *_numba_args, target="parallel"
     )(_translational_coefficients_all)
-except CudaSupportError:
-    _translational_coefficients_all_cuda = None
+
+    try:
+        _translational_coefficients_all_impl[("cuda", dtype_c)] = numba.guvectorize(
+            *_numba_args,
+            target="cuda",
+        )(_translational_coefficients_all)
+    except CudaSupportError:
+        _translational_coefficients_all_impl[("cuda", dtype_c)] = None
 
 
 def translational_coefficients_all(
@@ -257,11 +259,12 @@ def translational_coefficients_all(
     ret = xp.zeros(
         (*shape, ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)), dtype=dtype, device=device
     )
-    (
-        _translational_coefficients_all_cuda
-        if "cuda" in str(device)
-        else _translational_coefficients_all_parallel
-    )(
+    _translational_coefficients_all_impl[
+        (
+            "cuda" if "cuda" in str(device) else "parallel",
+            complex128 if dtype == xp.complex128 else complex64,
+        )
+    ](
         translational_coefficients_sectorial_init,
         ret,
     )
