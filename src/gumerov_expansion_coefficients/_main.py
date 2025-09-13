@@ -5,7 +5,7 @@ from typing import Any
 import numba
 from array_api._2024_12 import Array
 from array_api_compat import array_namespace
-from numba import complex64, complex128, jit, prange
+from numba import complex64, complex128, float32, jit, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
@@ -54,16 +54,16 @@ minus_1_power_jit = jit(inline="always")(minus_1_power)
 def a(n: int, m: int, /) -> float:
     m_abs = abs(m)
     if m_abs > n:
-        return 0
-    return sqrt((n + m_abs + 1) * (n - m_abs + 1) / ((2 * n + 1) * (2 * n + 3)))
+        return float32(0)
+    return sqrt(float32((n + m_abs + 1) * (n - m_abs + 1)) / float32((2 * n + 1) * (2 * n + 3)))
 
 
 @jit()
 def b(n: int, m: int, /) -> float:
     m_abs = abs(m)
     if m_abs > n:
-        return 0
-    tmp = sqrt((n - m - 1) * (n - m) / ((2 * n - 1) * (2 * n + 1)))
+        return float32(0)
+    tmp = sqrt(float32((n - m - 1) * (n - m)) / float32((2 * n - 1) * (2 * n + 1)))
     if m >= 0:
         return tmp
     else:
@@ -181,7 +181,7 @@ def _translational_coefficients_all(
                     md,
                     n,
                     m,
-                    minus_1_power_jit(n + nd) * _get_coef(ret, nd, -md, n, -m),
+                    float32(minus_1_power_jit(n + nd)) * _get_coef(ret, nd, -md, n, -m),
                     swap=True,
                 )
 
@@ -248,8 +248,7 @@ def translational_coefficients_all(
 
     Notes
     -----
-    Internally complex128 is used even if the input is complex64,
-    which means the performance for complex64 input may be poor.
+    Internally complex64 is used even if the input is complex128.
     """
     xp = array_namespace(translational_coefficients_sectorial_init)
     dtype = translational_coefficients_sectorial_init.dtype
@@ -299,8 +298,7 @@ def translational_coefficients(
 
     Notes
     -----
-    Internally complex128 is used even if the input is complex64,
-    which means the performance for complex64 input may be poor.
+    Internally complex64 is used even if the input is complex128.
     """
     translational_coefficients_sectorial_init_ = translational_coefficients_sectorial_init(
         kr, theta, phi, same, n_end

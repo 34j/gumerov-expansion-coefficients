@@ -1,12 +1,16 @@
+from io import StringIO
+
 import array_api_extra as xpx
 import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from array_api_compat import array_namespace
 from array_api_compat import numpy as np
 from array_api_negative_index import arange_asymmetric
+from numba import jit
 
 from gumerov_expansion_coefficients._elementary_solutions import R_all, idx_all
 from gumerov_expansion_coefficients._main import (
+    _translational_coefficients_all,
     idx,
     idx_i,
     minus_1_power,
@@ -14,6 +18,15 @@ from gumerov_expansion_coefficients._main import (
     translational_coefficients,
     translational_coefficients_sectorial_init,
 )
+
+
+def test_inspect_types():
+    with StringIO() as f:
+        jit("void(complex64[:], complex64[:, :], complex64)")(
+            _translational_coefficients_all
+        ).inspect_types(f)
+        output = f.getvalue()
+        assert "complex128" not in output
 
 
 def euclidean_to_spherical(x: Array, y: Array, z: Array) -> tuple[Array, Array, Array]:
