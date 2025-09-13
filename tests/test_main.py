@@ -3,18 +3,16 @@ import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from array_api_compat import array_namespace
 from array_api_compat import numpy as np
+from array_api_negative_index import arange_asymmetric
 
+from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all
 from gumerov_expansion_coefficients._main import (
-    R_all,
     idx,
-    idx_all,
     idx_i,
     minus_1_power,
     ndim_harm,
     translational_coefficients,
     translational_coefficients_sectorial_init,
-    translational_coefficients_sectorial_n_m,
-    translational_coefficients_sectorial_nd_md,
 )
 
 
@@ -75,12 +73,11 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     r = xp.asarray(7.3484693)
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
-    n_end = 3
-    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
-    sectorial = translational_coefficients_sectorial_n_m(
-        n_end=n_end,
-        translational_coefficients_sectorial_init=init,
-    )
+    n_end = 4
+    m = arange_asymmetric(n_end, xp=xp)
+    sectorial = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)[
+        :, idx(xp.abs(m), m)
+    ]
     # assert sectorial[idx_i(1, 1), 0] == pytest.approx(0.01656551+0.05797928j)
     assert sectorial[idx_i(0, 0), 1] == pytest.approx(0.01656551 - 0.05797928j)
     assert sectorial[idx_i(0, 0), 2] == pytest.approx(0.15901178 + 0.09894066j)
@@ -102,17 +99,9 @@ def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
     theta = xp.asarray(1.43429)
     phi = xp.asarray(-1.2924967)
     n_end = 2
-    init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
-    sectorial_n_m = translational_coefficients_sectorial_n_m(
-        n_end=n_end,
-        translational_coefficients_sectorial_init=init,
-    )
-    sectorial_nd_md = translational_coefficients_sectorial_nd_md(
-        n_end=n_end,
-        translational_coefficients_sectorial_n_m=sectorial_n_m,
-    )
-    assert sectorial_nd_md[1, idx_i(1, 0)] == sectorial_n_m[idx_i(1, 0), -1]
-    assert sectorial_nd_md[1, idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
+    t = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)
+    assert t[idx_i(1, 1), idx_i(1, 0)] == t[idx_i(1, 0), idx_i(1, -1)]
+    assert t[idx_i(1, 1), idx_i(1, 0)] == pytest.approx(0.01094844 + 0.03831954j)
 
 
 def test_main(xp: ArrayNamespaceFull) -> None:
@@ -540,7 +529,13 @@ def test_main_all(xp: ArrayNamespaceFull, same: bool) -> None:
     n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=None)
     expected = expected[n, m, ...][:, n, m]
     expected = xp.moveaxis(expected, 0, -1)
-    print(coefs, expected)
+    # print(coefs, expected)
+    # from io import StringIO
+    # with StringIO() as f:
+    #     xp.savetxt(f, xp.abs(coefs) > 1e-6, fmt="%d")
+    #     xp.savetxt(f, xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6), fmt="%d")
+    #     print(f.getvalue())
+    # print(xp.nonzero(~xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6)))
     assert xp.all(xpx.isclose(coefs, expected, atol=1e-6, rtol=1e-6))
 
 
@@ -558,11 +553,11 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
     y_sp = euclidean_to_spherical(y[0], y[1], y[2])
 
     for n_end_add in [3, 5, 7, 9]:
-        x_R = R_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end_add)
+        x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end_add, type="R")
         t_coef = translational_coefficients(
-            k * t_sp[0], t_sp[1], t_sp[2], same=True, n_end=n_end_add
+            k * t_sp[0], t_sp[1], t_sp[2], same=False, n_end=n_end_add
         )
-        y_S = R_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add)
+        y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add, type="S")
         expected = y_S[idx_i(2, 0)]
-        actual = xp.vecdot(t_coef, x_R[:, None], axis=0)[idx_i(2, 0)]
+        actual = xp.sum(t_coef * x_R[:, None], axis=0)[idx_i(2, 0)]
         print(np.round(complex(expected), decimals=6), np.round(complex(actual), decimals=6))
