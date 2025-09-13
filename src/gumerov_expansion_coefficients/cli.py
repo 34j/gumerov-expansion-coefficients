@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import torch as torch_original
 import typer
+from aquarel import load_theme
 from array_api_compat import torch
 from cm_time import timer
 from numba import threading_layer
@@ -86,11 +87,12 @@ def benchmark(
 
 @app.command()
 def plot() -> None:
+    theme = load_theme("boxy_dark")
+    theme.apply()
     df = pd.read_csv("timing_results.csv")
     hue_name = "Backend, Device"
     df[hue_name] = df[["backend", "device"]].agg(", ".join, axis=1)
     hue_unique = df[hue_name].unique()
-    sns.set_theme()
     g = sns.relplot(
         data=df,
         x="n_end",

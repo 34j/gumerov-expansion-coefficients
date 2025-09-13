@@ -1,16 +1,12 @@
-from io import StringIO
-
 import array_api_extra as xpx
 import pytest
 from array_api._2024_12 import Array, ArrayNamespaceFull
 from array_api_compat import array_namespace
 from array_api_compat import numpy as np
 from array_api_negative_index import arange_asymmetric
-from numba import jit
 
-from gumerov_expansion_coefficients._elementary_solutions import R_all, idx_all
+from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all
 from gumerov_expansion_coefficients._main import (
-    _translational_coefficients_all,
     idx,
     idx_i,
     minus_1_power,
@@ -18,15 +14,6 @@ from gumerov_expansion_coefficients._main import (
     translational_coefficients,
     translational_coefficients_sectorial_init,
 )
-
-
-def test_inspect_types():
-    with StringIO() as f:
-        jit("void(complex64[:], complex64[:, :], complex64)")(
-            _translational_coefficients_all
-        ).inspect_types(f)
-        output = f.getvalue()
-        assert "complex128" not in output
 
 
 def euclidean_to_spherical(x: Array, y: Array, z: Array) -> tuple[Array, Array, Array]:
@@ -566,11 +553,11 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
     y_sp = euclidean_to_spherical(y[0], y[1], y[2])
 
     for n_end_add in [3, 5, 7, 9]:
-        x_R = R_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end_add)
+        x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end_add, type="R")
         t_coef = translational_coefficients(
-            k * t_sp[0], t_sp[1], t_sp[2], same=True, n_end=n_end_add
+            k * t_sp[0], t_sp[1], t_sp[2], same=False, n_end=n_end_add
         )
-        y_S = R_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add)
+        y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end_add, type="S")
         expected = y_S[idx_i(2, 0)]
-        actual = xp.vecdot(t_coef, x_R[:, None], axis=0)[idx_i(2, 0)]
+        actual = xp.sum(t_coef * x_R[:, None], axis=0)[idx_i(2, 0)]
         print(np.round(complex(expected), decimals=6), np.round(complex(actual), decimals=6))

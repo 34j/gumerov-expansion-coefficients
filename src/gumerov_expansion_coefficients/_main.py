@@ -8,7 +8,7 @@ from array_api_compat import array_namespace
 from numba import complex64, complex128, float32, float64, jit, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
-from gumerov_expansion_coefficients._elementary_solutions import R_all, S_all, idx_all
+from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all
 
 # Gumerov's notation
 # E^m_n = sum_{m'n'} (E|F)^{m' m}_{n' n} F^{m'}_{n'}
@@ -76,21 +76,13 @@ def translational_coefficients_sectorial_init(
     """
     xp = array_namespace(kr, theta, phi)
     n, m = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=kr.device)
+    # 4.43 / 4.58
     # (E|F)^{m' 0}_{n' 0} = (E|F)^{m' 0}_{n'}
-    if not same:
-        # 4.43
-        return (
-            minus_1_power(n)
-            * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
-            * S_all(kr, theta, phi, n_end=2 * n_end - 1)[..., idx(n, -m)]
-        )
-    else:
-        # 4.58
-        return (
-            minus_1_power(n)
-            * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
-            * R_all(kr, theta, phi, n_end=2 * n_end - 1)[..., idx(n, -m)]
-        )
+    return (
+        minus_1_power(n)
+        * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
+        * RS_all(kr, theta, phi, n_end=2 * n_end - 1, type="R" if same else "S")[..., idx(n, -m)]
+    )
 
 
 @jit(inline="always")
