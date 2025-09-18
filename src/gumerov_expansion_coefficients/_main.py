@@ -8,7 +8,7 @@ from array_api_compat import array_namespace
 from numba import complex64, complex128, float32, float64, jit, prange
 from numba.cuda.cudadrv.error import CudaSupportError
 
-from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all
+from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all, minus_1_power
 
 # Gumerov's notation
 # E^m_n = sum_{m'n'} (E|F)^{m' m}_{n' n} F^{m'}_{n'}
@@ -22,9 +22,7 @@ def idx_i(n: int, m: int, /) -> int:
     # (0, 0) -> 0
     # (1, -1) -> 1
     # (1, 0) -> 2
-    if abs(m) > n:
-        return -1
-    return n * (n + 1) + m
+    return n**2 + (m % (2 * n + 1))
 
 
 def idx(n: Array, m: Array, /) -> Array:
@@ -34,17 +32,13 @@ def idx(n: Array, m: Array, /) -> Array:
     # (1, 0) -> 2
     xp = array_namespace(n, m)
     m_abs = xp.abs(m)
-    return xp.where(m_abs > n, -1, n * (n + 1) + m)
+    return xp.where(m_abs > n, -1, n**2 + (m % (2 * n + 1)))
 
 
 @jit(inline="always")
 def ndim_harm(n_end: int, /) -> int:
     """Number of spherical harmonics which degree is less than n_end."""
     return n_end**2
-
-
-def minus_1_power(x: Array, /) -> Array:
-    return 1 - 2 * (x % 2)
 
 
 minus_1_power_jit = jit(inline="always")(minus_1_power)

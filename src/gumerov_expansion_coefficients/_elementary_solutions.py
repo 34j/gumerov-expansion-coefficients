@@ -5,20 +5,35 @@ from typing import Any, Literal
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
 from array_api_compat import numpy as np
+from array_api_negative_index import arange_asymmetric
 from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
 
 def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
     dtype = dtype or xp.int32
     n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
-    m = xp.arange(-n_end + 1, n_end, dtype=dtype, device=device)[None, :]
+    m = arange_asymmetric(n_end, xp=xp, dtype=dtype, device=device)[None, :]
     n, m = xp.broadcast_arrays(n, m)
     mask = n >= xp.abs(m)
     return n[mask], m[mask]
 
 
+def minus_1_power(x: Array, /) -> Array:
+    return 1 - 2 * (x % 2)
+
+
 def RS_all(kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["R", "S"]) -> Array:
-    """Regular / Singular elementary solution of 3D Helmholtz equation.
+    r"""Regular / Singular elementary solution of 3D Helmholtz equation.
+
+    $
+    Y_n^m (\theta, \phi) :=
+    (-1)^m \sqrt{\frac{(2n+1)(n-\abs{m})!}{4 \pi (n+\abs{m})!}}
+    P_n^{\abs{m}} (\cos \theta) e^{i m \phi}
+    $
+
+    $ R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi) $
+
+    $ S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi) $
 
     Parameters
     ----------
@@ -52,7 +67,9 @@ def RS_all(kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["R"
     if type == "S":
         tmp = tmp + 1j * spherical_yn(n, kr[..., None])
     return xp.asarray(
-        tmp * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
+        minus_1_power((xp.abs(m) - m) // 2)
+        * tmp
+        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
         dtype=dtype,
         device=device,
     )
