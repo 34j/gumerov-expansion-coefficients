@@ -61,15 +61,13 @@ def RS_all(
 ) -> Array:
     r"""Regular / Singular elementary solution of 3D Helmholtz equation.
 
-    ... math::
+    .. math::
         Y_n^m (\theta, \phi) :=
         (-1)^m \sqrt{\frac{(2n+1)(n-\left|m\right|)!}{4 \pi (n+\left|m\right|)!}}
         P_n^{\left|m\right|} (\cos \theta) e^{i m \phi}
 
-    ... math::
         R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi)
 
-    ... math::
         S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi)
 
     Parameters
