@@ -86,6 +86,15 @@ $$
 - [1] Gumerov, N. A., & Duraiswami, R. (2004). Recursions for the Computation of Multipole Translation and Rotation Coefficients for the 3-D Helmholtz Equation. SIAM Journal on Scientific Computing, 25(4), 1344–1381. https://doi.org/10.1137/S1064827501399705
 - [2] Gumerov, N. A., & Ramani, D. (2002年). Computation of scattering from N spheres using multipole reexpansion. The Journal of the Acoustical Society of America, 112(6), 2688–2701. https://doi.org/10.1121/1.1517253
 
+## Benchmark
+
+```shell
+gec benchmark
+gec plot
+```
+
+![timing_results](https://raw.githubusercontent.com/34j/gumerov-expansion-coefficients/main/timing_results.jpg)
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):

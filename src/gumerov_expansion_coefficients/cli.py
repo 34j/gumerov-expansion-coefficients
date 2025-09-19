@@ -86,7 +86,7 @@ def benchmark(
 
 
 @app.command()
-def plot() -> None:
+def plot(format: str = "jpg", dpi: int = 300) -> None:
     theme = load_theme("boxy_dark")
     theme.apply()
     df = pd.read_csv("timing_results.csv")
@@ -109,6 +109,4 @@ def plot() -> None:
     g.set_xlabels("N - 1")
     g.set_ylabels("Time (s)")
     g.set(yscale="log")
-    g.savefig("timing_results.jpg", dpi=300, bbox_inches="tight")
-    g.savefig("timing_results.png", dpi=300, bbox_inches="tight")
-    g.savefig("timing_results.eps", bbox_inches="tight")
+    g.savefig(f"timing_results.{format}", dpi=dpi, bbox_inches="tight")
