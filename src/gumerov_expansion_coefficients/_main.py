@@ -265,13 +265,13 @@ def translational_coefficients(
     r"""Translational coefficients (E|F)^{m',m}_{n',n}.
 
     .. math::
-        Y_n^m (\theta, \phi) :=
+        Y_n^m (\theta, \phi) &:=
         (-1)^m \sqrt{\frac{(2n+1)(n-\left|m\right|)!}{4 \pi (n+\left|m\right|)!}}
         P_n^{\left|m\right|} (\cos \theta) e^{i m \phi}
 
-        R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi)
+        R_n^m (kr, \theta, \phi) &:= j_n(kr) Y_n^m (\theta, \phi)
 
-        S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi)
+        S_n^m (kr, \theta, \phi) &:= h_n^{(1)}(kr) Y_n^m (\theta, \phi)
 
     Parameters
     ----------
