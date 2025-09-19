@@ -33,7 +33,7 @@ repos:
     hooks:
       - id: pyproject-fmt
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.17
+    rev: 0.8.18
     hooks:
       - id: uv-lock
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -57,7 +57,7 @@ repos:
     hooks:
       - id: codespell
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.18.1
     hooks:
       - id: mypy
         additional_dependencies: []
@@ -73,6 +73,6 @@ repos:
         files: \.typ$
         args: [-i]
   - repo: https://github.com/NixOS/nixfmt
-    rev: v1.0.0
+    rev: v1.0.1
     hooks:
       - id: nixfmt
