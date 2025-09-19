@@ -10,6 +10,34 @@ from scipy.special import sph_harm_y_all, spherical_jn, spherical_yn
 
 
 def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple[Array, Array]:
+    """Get all quantum numbers (n, m) where n < n_end.
+
+    Parameters
+    ----------
+    n_end : int
+        Maximum degree of spherical harmonics.
+    xp : ArrayNamespace
+        The array namespace.
+    dtype : Any
+        The data type of the output arrays.
+    device : Any
+        The device of the output arrays.
+
+    Returns
+    -------
+    tuple[Array, Array]
+        Arrays of quantum numbers n and m of shape (n_end**2,).
+
+    Examples
+    --------
+    >>> import array_api_compat.numpy as np
+    >>> from gumerov_expansion_coefficients import idx_all
+    >>> n, m = idx_all(3, xp=np, dtype=np.int32, device=None)
+    >>> n
+    array([0, 1, 1, 1, 2, 2, 2, 2, 2], dtype=int32)
+    >>> m
+    array([ 0,  0,  1, -1,  0,  1,  2, -2, -1], dtype=int32)
+    """
     dtype = dtype or xp.int32
     n = xp.arange(n_end, dtype=dtype, device=device)[:, None]
     m = arange_asymmetric(n_end, xp=xp, dtype=dtype, device=device)[None, :]

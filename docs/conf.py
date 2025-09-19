@@ -25,6 +25,8 @@ release = "1.1.0"
 # ones.
 extensions = [
     "myst_parser",
+    "sphinx.ext.doctest",
+    "sphinx.ext.duration",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
