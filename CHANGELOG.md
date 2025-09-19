@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.0 (2025-09-19)
+
+### Features
+
+- Numba-cuda ([`5989359`](https://github.com/34j/gumerov-expansion-coefficients/commit/59893595b4d9eed5fc436b3063b53d303e73103f))
+
 ## v1.1.0 (2025-08-20)
 
 ### Features
