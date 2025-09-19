@@ -30,8 +30,6 @@ def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple
 
     Examples
     --------
-    >>> import array_api_compat.numpy as np
-    >>> from gumerov_expansion_coefficients import idx_all
     >>> n, m = idx_all(3, xp=np, dtype=np.int32, device=None)
     >>> n
     array([0, 1, 1, 1, 2, 2, 2, 2, 2], dtype=int32)
