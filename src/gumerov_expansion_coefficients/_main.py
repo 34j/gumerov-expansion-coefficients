@@ -75,7 +75,9 @@ def translational_coefficients_sectorial_init(
     return (
         minus_1_power(n)
         * xp.sqrt(xp.asarray(4.0, dtype=kr.dtype, device=kr.device) * xp.pi)
-        * RS_all(kr, theta, phi, n_end=2 * n_end - 1, type="R" if same else "S")[..., idx(n, -m)]
+        * RS_all(kr, theta, phi, n_end=2 * n_end - 1, type="regular" if same else "singular")[
+            ..., idx(n, -m)
+        ]
     )
 
 
@@ -233,10 +235,6 @@ def translational_coefficients_all(
     -------
     Array
         Translational coefficients [(m',n'),(m,n)] of shape (ndim_harm(n_end), ndim_harm(n_end))
-
-    Notes
-    -----
-    Internally complex64 is used even if the input is complex128.
     """
     xp = array_namespace(translational_coefficients_sectorial_init)
     dtype = translational_coefficients_sectorial_init.dtype
@@ -264,7 +262,21 @@ def translational_coefficients_all(
 def translational_coefficients(
     kr: Array, theta: Array, phi: Array, *, same: bool, n_end: int
 ) -> Array:
-    """Initial values of sectorial translational coefficients (E|F)^{m',m}_{0, 0}
+    r"""Translational coefficients (E|F)^{m',m}_{n',n}.
+
+    $$
+    Y_n^m (\theta, \phi) :=
+    (-1)^m \sqrt{\frac{(2n+1)(n-\abs{m})!}{4 \pi (n+\abs{m})!}}
+    P_n^{\abs{m}} (\cos \theta) e^{i m \phi}
+    $$
+
+    $$
+    R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi)
+    $$
+
+    $$
+    S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi)
+    $$
 
     Parameters
     ----------
@@ -283,11 +295,7 @@ def translational_coefficients(
     Returns
     -------
     Array
-        Initial sectorial translational coefficients of shape (ndim_harm(n_end),)
-
-    Notes
-    -----
-    Internally complex64 is used even if the input is complex128.
+        Initial sectorial translational coefficients of shape (..., n_end**2)
     """
     translational_coefficients_sectorial_init_ = translational_coefficients_sectorial_init(
         kr, theta, phi, same, n_end

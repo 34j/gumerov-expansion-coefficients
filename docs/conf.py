@@ -29,6 +29,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
 ]
+myst_enable_extensions = ["dollarmath"]
 napoleon_google_docstring = False
 
 # The suffix of source filenames.

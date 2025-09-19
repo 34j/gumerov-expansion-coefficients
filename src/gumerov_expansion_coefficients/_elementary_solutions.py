@@ -28,18 +28,24 @@ def minus_1_power(x: Array | int, /) -> Array | int:
     return 1 - 2 * (x % 2)
 
 
-def RS_all(kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["R", "S"]) -> Array:
+def RS_all(
+    kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["regular", "singular"]
+) -> Array:
     r"""Regular / Singular elementary solution of 3D Helmholtz equation.
 
-    $
+    $$
     Y_n^m (\theta, \phi) :=
     (-1)^m \sqrt{\frac{(2n+1)(n-\abs{m})!}{4 \pi (n+\abs{m})!}}
     P_n^{\abs{m}} (\cos \theta) e^{i m \phi}
-    $
+    $$
 
-    $ R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi) $
+    $$
+    R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi)
+    $$
 
-    $ S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi) $
+    $$
+    S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi)
+    $$
 
     Parameters
     ----------
@@ -56,7 +62,7 @@ def RS_all(kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["R"
     -------
     Array
         Regular / Singular elementary solution of
-        3D Helmholtz equation of shape (..., ndim_harm(n_end),)
+        3D Helmholtz equation of shape (..., n_end**2)
     """
     xp = array_namespace(kr, theta, phi)
     device = kr.device
@@ -70,7 +76,7 @@ def RS_all(kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["R"
     theta = to_device(theta, "cpu")
     phi = to_device(phi, "cpu")
     tmp = spherical_jn(n, kr[..., None])
-    if type == "S":
+    if type == "singular":
         tmp = tmp + 1j * spherical_yn(n, kr[..., None])
     return xp.asarray(
         minus_1_power((xp.abs(m) - m) // 2)

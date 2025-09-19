@@ -129,8 +129,8 @@ def test_main(xp: ArrayNamespaceFull) -> None:
     assert coef[idx_i(2, -1), idx_i(4, -3)] == pytest.approx(0.10999471 - 0.06844115j)
 
 
-@pytest.mark.parametrize("type", ["R", "S"])
-def test_rs_all(xp: ArrayNamespaceFull, type: Literal["R", "S"]) -> None:
+@pytest.mark.parametrize("type", ["regular", "singular"])
+def test_rs_all(xp: ArrayNamespaceFull, type: Literal["regular", "singular"]) -> None:
     k = xp.asarray(1.0)
     t = xp.asarray([2, -7, 1])
     r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
@@ -140,7 +140,7 @@ def test_rs_all(xp: ArrayNamespaceFull, type: Literal["R", "S"]) -> None:
     np.savetxt(f"tests/.cache/{type}.csv", np.asarray(actual, dtype=np.complex128), delimiter=",")
     expected = xp.asarray(
         np.loadtxt(
-            f"tests/{'regular' if type == 'R' else 'singular'}_Phase.CONDON_SHORTLEY.csv",
+            f"tests/{type}_Phase.CONDON_SHORTLEY.csv",
             delimiter=",",
             dtype=np.complex128,
         ),
@@ -201,11 +201,11 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
         8: 0.049627 - 0.019883j,
     }
 
-    y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=6, type="S")
+    y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=6, type="singular")
     assert y_S[idx_i(5, 2)] == pytest.approx(expected["exact"], abs=1e-6)
 
     t_coef = translational_coefficients(k * t_sp[0], t_sp[1], t_sp[2], same=False, n_end=9)
-    x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=9, type="R")
+    x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=9, type="regular")
     for n_end in [9, 7, 5, 3, 1]:
         t_coef = t_coef[: ndim_harm(n_end)]
         y_S_sum = xp.sum(t_coef * x_R[: ndim_harm(n_end), None], axis=0)
