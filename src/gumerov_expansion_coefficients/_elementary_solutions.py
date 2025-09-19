@@ -1,6 +1,6 @@
 # These functions are not JIT-compatible, thus we use array_api_compat.
 # (2.14)
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 from array_api._2024_12 import Array, ArrayNamespace
 from array_api_compat import array_namespace, to_device
@@ -18,7 +18,13 @@ def idx_all(n_end: int, /, xp: ArrayNamespace, dtype: Any, device: Any) -> tuple
     return n[mask], m[mask]
 
 
-def minus_1_power(x: Array, /) -> Array:
+@overload
+def minus_1_power(x: Array, /) -> Array: ...
+@overload
+def minus_1_power(x: int, /) -> int: ...  # type: ignore[overload-cannot-match]
+
+
+def minus_1_power(x: Array | int, /) -> Array | int:
     return 1 - 2 * (x % 2)
 
 

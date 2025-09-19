@@ -60,9 +60,12 @@ def test_minus_1_power() -> None:
 def test_init(xp: ArrayNamespaceFull) -> None:
     # Gumerov (2, -7, 1)
     k = xp.asarray(1.0)
-    r = xp.asarray(7.3484693)
-    theta = xp.asarray(1.43429)
-    phi = xp.asarray(-1.2924967)
+    t = xp.asarray([2, -7, 1])
+    r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
+    assert r == pytest.approx(7.3484693)
+    assert theta == pytest.approx(1.43429)
+    assert phi == pytest.approx(-1.2924967)
+
     n_end = 4
     init = translational_coefficients_sectorial_init(k * r, theta, phi, True, n_end)
     assert init[idx_i(2, 1)] == pytest.approx(0.01413437 + 0.04947031j)
@@ -72,9 +75,9 @@ def test_init(xp: ArrayNamespaceFull) -> None:
 def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
     # Gumerov (2, -7, 1)
     k = xp.asarray(1.0)
-    r = xp.asarray(7.3484693)
-    theta = xp.asarray(1.43429)
-    phi = xp.asarray(-1.2924967)
+    t = xp.asarray([2, -7, 1])
+    r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
+
     n_end = 4
     m = arange_asymmetric(n_end, xp=xp)
     sectorial = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)[
@@ -97,41 +100,41 @@ def test_sectorial_n_m(xp: ArrayNamespaceFull) -> None:
 def test_sectorial_nd_md(xp: ArrayNamespaceFull) -> None:
     # Gumerov (2, -7, 1)
     k = xp.asarray(1.0)
-    r = xp.asarray(7.3484693)
-    theta = xp.asarray(1.43429)
-    phi = xp.asarray(-1.2924967)
+    t = xp.asarray([2, -7, 1])
+    r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
+
     n_end = 2
-    t = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)
-    assert t[idx_i(1, 1), idx_i(1, 0)] == t[idx_i(1, 0), idx_i(1, -1)]
-    assert t[idx_i(1, 1), idx_i(1, 0)] == pytest.approx(-0.01094844 - 0.03831954j)
+    coef = translational_coefficients(k * r, theta, phi, n_end=n_end, same=True)
+    assert coef[idx_i(1, 1), idx_i(1, 0)] == coef[idx_i(1, 0), idx_i(1, -1)]
+    assert coef[idx_i(1, 1), idx_i(1, 0)] == pytest.approx(-0.01094844 - 0.03831954j)
 
 
 def test_main(xp: ArrayNamespaceFull) -> None:
     # Gumerov (2, -7, 1)
     k = xp.asarray(1.0)
-    r = xp.asarray(7.3484693)
-    theta = xp.asarray(1.43429)
-    phi = xp.asarray(-1.2924967)
+    t = xp.asarray([2, -7, 1])
+    r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
+
     n_end = 5
-    coefs = translational_coefficients(
+    coef = translational_coefficients(
         k * r,
         theta,
         phi,
         same=True,
         n_end=n_end,
     )
-    assert coefs[idx_i(1, 0), idx_i(1, 0)] == pytest.approx(-0.01254681 + 0.0j)
-    assert coefs[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
-    assert coefs[idx_i(2, 1), idx_i(4, -3)] == pytest.approx(-0.10065599 + 0.20439409j)
-    assert coefs[idx_i(2, -1), idx_i(4, -3)] == pytest.approx(0.10999471 - 0.06844115j)
+    assert coef[idx_i(1, 0), idx_i(1, 0)] == pytest.approx(-0.01254681 + 0.0j)
+    assert coef[idx_i(2, 1), idx_i(4, 3)] == pytest.approx(0.10999471 + 0.06844115j)
+    assert coef[idx_i(2, 1), idx_i(4, -3)] == pytest.approx(-0.10065599 + 0.20439409j)
+    assert coef[idx_i(2, -1), idx_i(4, -3)] == pytest.approx(0.10999471 - 0.06844115j)
 
 
 @pytest.mark.parametrize("type", ["R", "S"])
 def test_rs_all(xp: ArrayNamespaceFull, type: Literal["R", "S"]) -> None:
     k = xp.asarray(1.0)
-    r = xp.asarray(7.3484693)
-    theta = xp.asarray(1.43429)
-    phi = xp.asarray(-1.2924967)
+    t = xp.asarray([2, -7, 1])
+    r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
+
     actual = RS_all(k * r, theta, phi, n_end=4, type=type)
     Path("tests/.cache").mkdir(exist_ok=True)
     np.savetxt(f"tests/.cache/{type}.csv", np.asarray(actual, dtype=np.complex128), delimiter=",")
@@ -151,7 +154,7 @@ def test_main_all(xp: ArrayNamespaceFull, same: bool) -> None:
     k = xp.asarray(1.0)
     t = xp.asarray([2, -7, 1])
     r, theta, phi = euclidean_to_spherical(t[0], t[1], t[2])
-    print(r, theta, phi)
+
     n_end = 3
     actual = translational_coefficients(
         k * r,
@@ -183,17 +186,27 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
     x = xp.asarray([-1.0, 1.0, 0.0])
     t = xp.asarray([2.0, -7.0, 1.0])
     y = x + t
-    print(y)
 
     # to spherical coordinates
     x_sp = euclidean_to_spherical(x[0], x[1], x[2])
     t_sp = euclidean_to_spherical(t[0], t[1], t[2])
     y_sp = euclidean_to_spherical(y[0], y[1], y[2])
 
-    for n_end in [7, 9]:
-        x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=n_end, type="R")
-        t_coef = translational_coefficients(k * t_sp[0], t_sp[1], t_sp[2], same=False, n_end=n_end)
-        y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=n_end, type="S")
-        expected = y_S[idx_i(5, 2)]
-        actual = xp.sum(t_coef * x_R[:, None], axis=0)[idx_i(5, 2)]
-        print(np.round(complex(expected), decimals=6), np.round(complex(actual), decimals=6))
+    expected = {
+        "exact": 0.049626 - 0.019882j,
+        0: 0.020196 + 0.013655j,
+        2: 0.049166 - 0.014885j,
+        4: 0.049805 - 0.019548j,
+        6: 0.049643 - 0.019875j,
+        8: 0.049627 - 0.019883j,
+    }
+
+    y_S = RS_all(k * y_sp[0], y_sp[1], y_sp[2], n_end=6, type="S")
+    assert y_S[idx_i(5, 2)] == pytest.approx(expected["exact"], abs=1e-6)
+
+    t_coef = translational_coefficients(k * t_sp[0], t_sp[1], t_sp[2], same=False, n_end=9)
+    x_R = RS_all(k * x_sp[0], x_sp[1], x_sp[2], n_end=9, type="R")
+    for n_end in [9, 7, 5, 3, 1]:
+        t_coef = t_coef[: ndim_harm(n_end)]
+        y_S_sum = xp.sum(t_coef * x_R[: ndim_harm(n_end), None], axis=0)
+        assert y_S_sum[idx_i(5, 2)] == pytest.approx(expected[n_end - 1], abs=1e-6)
