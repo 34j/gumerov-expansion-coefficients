@@ -29,12 +29,24 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.mathjax",
+    "sphinx_math_dollar",
 ]
 myst_enable_extensions = [
     "amsmath",
     "dollarmath",
 ]
-napoleon_google_docstring = False
+mathjax_config = {
+    "tex2jax": {
+        "inlineMath": [["\\(", "\\)"]],
+        "displayMath": [["\\[", "\\]"]],
+    },
+}
+mathjax3_config = {
+    "tex": {
+        "inlineMath": [["\\(", "\\)"]],
+        "displayMath": [["\\[", "\\]"]],
+    }
+}
 
 # The suffix of source filenames.
 source_suffix = [
