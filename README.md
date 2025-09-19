@@ -45,7 +45,7 @@ Multiple translation and rotation coefficients for the 3D Helmholtz Equation
 Install this via pip (or your favourite package manager):
 
 ```shell
-pip install gumerov-expansion-coefficients
+pip install gumerov-expansion-coefficients[cli,cuda]
 ```
 
 ## Usage
@@ -61,9 +61,39 @@ translational_coefficients(
 )  # (S|R) coefficients from 0 to 9 th degree
 ```
 
+- The definition of spherical harmonics are same as in [1]. Note that there are 3 other common definitions, and this definition differs from `scipy.special.sph_harm_y` for negative `m`.
+
+$$
+Y_n^m (\theta, \phi) :=
+(-1)^m \sqrt{\frac{(2n+1)(n-\left|m\right|)!}{4 \pi (n+\left|m\right|)!}}
+P_n^{\left|m\right|} (\cos \theta) e^{i m \phi}
+$$
+
+$$
+R_n^m (kr, \theta, \phi) := j_n(kr) Y_n^m (\theta, \phi)
+$$
+
+$$
+S_n^m (kr, \theta, \phi) := h_n^{(1)}(kr) Y_n^m (\theta, \phi)
+$$
+
+- The return array is 2D array with shape `(n_end**2, n_end**2)`.
+- The first axis is to be summed over, resulting in the elemenary solutions at the second axis.
+- The coefficient coressponding to the quantum numbers `(n, m)` is mapped to `n**2 + (m % (2 * n + 1))`-th index, while in [2] it is mapped to `n * (n + 1) + m`-th index.
+
 ## References
 
-- Gumerov, N. A., & Duraiswami, R. (2004). Recursions for the Computation of Multipole Translation and Rotation Coefficients for the 3-D Helmholtz Equation. SIAM Journal on Scientific Computing, 25(4), 1344–1381. https://doi.org/10.1137/S1064827501399705
+- [1] Gumerov, N. A., & Duraiswami, R. (2004). Recursions for the Computation of Multipole Translation and Rotation Coefficients for the 3-D Helmholtz Equation. SIAM Journal on Scientific Computing, 25(4), 1344–1381. https://doi.org/10.1137/S1064827501399705
+- [2] Gumerov, N. A., & Ramani, D. (2002年). Computation of scattering from N spheres using multipole reexpansion. The Journal of the Acoustical Society of America, 112(6), 2688–2701. https://doi.org/10.1121/1.1517253
+
+## Benchmark
+
+```shell
+gec benchmark
+gec plot
+```
+
+![timing_results](https://raw.githubusercontent.com/34j/gumerov-expansion-coefficients/main/timing_results.jpg)
 
 ## Contributors ✨
 

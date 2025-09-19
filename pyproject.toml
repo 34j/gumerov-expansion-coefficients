@@ -28,12 +28,9 @@ classifiers = [
 dependencies = [
   "array-api-compat>=1.11.2",
   "array-api-extra>=0.1.1",
-  "array-api-jit>=0.0.0",
+  "array-api-negative-index>=1.0.0",
   "numba>=0.60.0",
-  "rich>=10",
   "scipy>=1.13.1",
-  "torch>=2.7.1",
-  "typer>=0.15,<1",
   "types-array-api>=1.1.5",
 ]
 
@@ -47,9 +44,16 @@ scripts.gec = "gumerov_expansion_coefficients.cli:app"
 
 [project.optional-dependencies]
 cli = [
+    "rich>=10",
+    "typer>=0.15,<1",
+    "torch>=2.7.1",
+    "aquarel>=0.0.7",
     "cm-time>=0.1.2",
     "pandas>=2.3.1",
     "seaborn>=0.13.2",
+]
+cuda = [
+    "numba-cuda>=0.19.1",
 ]
 
 [dependency-groups]
@@ -62,6 +66,7 @@ docs = [
   "myst-parser>=0.16; python_version>='3.11'",
   "sphinx>=4; python_version>='3.11'",
   "sphinx-autobuild>=2025,<2026; python_version>='3.11'",
+  "sphinx-math-dollar>=1.2.1",
 ]
 
 [tool.ruff]
@@ -103,6 +108,11 @@ lint.isort.known-first-party = [ "gumerov_expansion_coefficients", "tests" ]
 addopts = """\
     -v
     -Wdefault
+    --cov=gumerov_expansion_coefficients
+    --cov-report=term
+    --cov-report=xml
+    --doctest-modules
+    --ignore=docs
     """
 pythonpath = [ "src" ]
 
