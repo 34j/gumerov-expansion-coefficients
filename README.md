@@ -45,7 +45,7 @@ Multiple translation and rotation coefficients for the 3D Helmholtz Equation
 Install this via pip (or your favourite package manager):
 
 ```shell
-pip install gumerov-expansion-coefficients
+pip install gumerov-expansion-coefficients[cli,cuda]
 ```
 
 ## Usage
