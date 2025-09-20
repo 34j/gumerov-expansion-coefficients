@@ -13,6 +13,7 @@ from gumerov_expansion_coefficients._main import (
     idx,
     idx_i,
     ndim_harm,
+    rotational_coefficients,
     translational_coefficients,
     translational_coefficients_sectorial_init,
 )
@@ -180,7 +181,7 @@ def test_main_all(xp: ArrayNamespaceFull, same: bool) -> None:
     assert xp.all(xpx.isclose(actual, expected, atol=1e-6, rtol=1e-6))
 
 
-def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
+def test_gumerov_table_translational(xp: ArrayNamespaceFull) -> None:
     k = 1.0
 
     x = xp.asarray([-1.0, 1.0, 0.0])
@@ -210,3 +211,11 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
         t_coef = t_coef[: ndim_harm(n_end)]
         y_S_sum = xp.sum(t_coef * x_R[: ndim_harm(n_end), None], axis=0)
         assert y_S_sum[idx_i(5, 2)] == pytest.approx(expected[n_end - 1], abs=1e-6)
+
+
+def test_gumerov_table_rotational(xp: ArrayNamespaceFull) -> None:
+    theta = xp.asarray(np.deg2rad(35))
+    phi = xp.asarray(np.deg2rad(165))
+    xi = xp.asarray(np.deg2rad(10))
+    coef = rotational_coefficients(theta, phi, xi, n_end=6)
+    assert coef[3][0, 2] == pytest.approx(0.34676 + 0.12621j, abs=1e-5)

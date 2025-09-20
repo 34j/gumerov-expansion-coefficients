@@ -205,6 +205,7 @@ def _translational_coefficients_all(
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
 
 
+@jit()
 def n_rotational_coefficients(n_end: int) -> int:
     r"""Number of rotational coefficients with degree less than n_end.
 
@@ -214,6 +215,7 @@ def n_rotational_coefficients(n_end: int) -> int:
     return n_end * (2 * n_end - 1) * (2 * n_end + 1) // 3
 
 
+@jit()
 def idx_rot(n: int, md: int, m: int, /) -> int:
     n_times_2_plus_1 = 2 * n + 1
     return (
@@ -273,7 +275,7 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         _ : Array
             Dummy return array for numba guvectorize
         """
-        n_end = (ret.shape[-3] + 1) // 2
+        n_end = (rotational_coefficients_init.shape[-1] + 1) // 2
         for n in prange(2 * n_end - 1):
             for md in prange(-n, n + 1):
                 ret[idx_rot(n, md, 0)] = rotational_coefficients_init[idx_i(n, md)]
@@ -321,22 +323,22 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         ),
         "rotational": (
             [
-                (dtype_f[:], dtype_f, dtype_f, dtype_f, dtype_f, dtype_f),
-                (dtype_c[:], dtype_f, dtype_f, dtype_f, dtype_c, dtype_f),
+                (dtype_f[:], dtype_f, dtype_f, dtype_f, dtype_f[:], dtype_f),
+                (dtype_c[:], dtype_f, dtype_f, dtype_f, dtype_c[:], dtype_f),
             ],
             "(n),( ),( ),( ),(m)->()",
         ),
     }
-    for k in ["translational", "rotational"]:
-        _impl[(k, "parallel", dtype_c)] = numba.guvectorize(*_args[k], target="parallel")(
-            _translational_coefficients_all
-        )
-
+    for k, func in (
+        ("translational", _translational_coefficients_all),
+        ("rotational", _rotational_coefficients_all),
+    ):
+        _impl[(k, "parallel", dtype_c)] = numba.guvectorize(*_args[k], target="parallel")(func)
         try:
             _impl[(k, "cuda", dtype_c)] = numba.guvectorize(
                 *_args[k],
                 target="cuda",
-            )(_translational_coefficients_all)
+            )(func)
         except CudaSupportError:
             _impl[(k, "cuda", dtype_c)] = None
 
