@@ -250,8 +250,9 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
     def _rotational_coefficients_all(
         rotational_coefficients_init: Array,
         theta: Array,
-        phi: Array,
-        xi: Array,
+        exp_phi: Array,
+        exp_phi_conj: Array,
+        exp_xi: Array,
         ret: Array,
         _: Array,
         /,
@@ -265,10 +266,12 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
             of shape (..., ndim_harm(2 * n_end - 1),)
         theta : Array
             polar angle of shape (...,)
-        phi : Array
-            azimuthal angle of shape (...,)
-        xi : Array
-            azimuthal angle of shape (...,)
+        exp_phi : Array
+            exp(i * phi) of shape (...,)
+        exp_phi_conj : Array
+            exp(-i * phi) of shape (...,)
+        exp_xi : Array
+            exp(i * xi) of shape (...,)
         ret : Array
             Empty array to store the result of shape (..., (N_end-1)(N_end)(2*N_end-1) / 6)
             where N_end = 2 * n_end - 1
@@ -281,17 +284,6 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
                 ret[idx_rot(n, md, 0)] = rotational_coefficients_init[idx_i(n, md)]
 
         one_f = dtype_f(1)  # noqa: B023
-        one_j = dtype_c(1j)  # noqa: B023
-        if phi == 0:
-            exp_phi = one_f
-            exp_phi_conj = one_f
-        else:
-            exp_phi = cos(phi) + one_j * sin(phi)
-            exp_phi_conj = cos(phi) - one_j * sin(phi)
-        if xi == 0:
-            exp_xi = one_f
-        else:
-            exp_xi = cos(xi) + one_j * sin(xi)
         one_minus_cos_theta = exp_phi * (one_f - cos(theta))
         one_plus_cos_theta = exp_phi_conj * (one_f + cos(theta))
         sin_theta = sin(theta)
@@ -323,10 +315,10 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         ),
         "rotational": (
             [
-                (dtype_f[:], dtype_f, dtype_f, dtype_f, dtype_f[:], dtype_f),
-                (dtype_c[:], dtype_f, dtype_f, dtype_f, dtype_c[:], dtype_f),
+                (dtype_f[:], dtype_f, dtype_f, dtype_f, dtype_f, dtype_f[:], dtype_f),
+                (dtype_c[:], dtype_f, dtype_c, dtype_c, dtype_c, dtype_c[:], dtype_f),
             ],
-            "(n),( ),( ),( ),(m)->()",
+            "(n),( ),( ),( ),( ),(m)->()",
         ),
     }
     for k, func in (
@@ -425,8 +417,9 @@ def rotational_coefficients_all(
     _impl[("rotational", "cuda" if "cuda" in str(device) else "parallel", dtype)](
         rotational_coefficients_init,
         theta,
-        phi,
-        xi,
+        xp.exp(phi * 1j),
+        xp.exp(-phi * 1j),
+        xp.exp(xi * 1j),
         ret,
     )
     ret = xp.asarray(
