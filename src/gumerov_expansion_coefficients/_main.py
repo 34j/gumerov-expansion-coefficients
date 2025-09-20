@@ -99,11 +99,11 @@ def rotational_coefficients_init(theta: Array, phi: Array, n_end: int, /) -> Arr
         Initial rotational coefficients of shape (..., ndim_harm(n_end),)
     """
     xp = array_namespace(theta, phi)
-    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=theta.device)
+    n, m = idx_all(2 * n_end - 1, xp=xp, dtype=xp.int32, device=theta.device)
     # 4.66
     return (
         xp.sqrt(xp.asarray(4.0, dtype=theta.dtype, device=theta.device) * xp.pi / (2 * n + 1))
-        * RS_all(None, theta, phi, n_end=n_end, type="harmonics")[..., idx(n, -m)]
+        * RS_all(None, theta, phi, n_end=2 * n_end - 1, type="harmonics")[..., idx(n, -m)]
     )
 
 
@@ -205,10 +205,19 @@ def _translational_coefficients_all(
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
 
 
+def n_rotational_coefficients(n_end: int) -> int:
+    r"""Number of rotational coefficients with degree less than n_end.
+
+    .. math::
+        \sum_{n=0}^{N-1} (2n+1)^2 = \frac{N(2N-1)(2N+1)}{3}
+    """
+    return n_end * (2 * n_end - 1) * (2 * n_end + 1) // 3
+
+
 def idx_rot(n: int, md: int, m: int, /) -> int:
     n_times_2_plus_1 = 2 * n + 1
     return (
-        ((n - 1) * n * (2 * n - 1)) // 6
+        n_rotational_coefficients(n)
         + n_times_2_plus_1 * (md % n_times_2_plus_1)
         + (m % n_times_2_plus_1)
     )
@@ -334,7 +343,6 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
 
 def translational_coefficients_all(
     *,
-    n_end: int,
     translational_coefficients_sectorial_init: Array,
 ) -> Array:
     """Translational coefficients (E|F)^{m',m}_{n',n}
@@ -354,6 +362,7 @@ def translational_coefficients_all(
     dtype = translational_coefficients_sectorial_init.dtype
     device = translational_coefficients_sectorial_init.device
     shape = translational_coefficients_sectorial_init.shape[:-1]
+    n_end = (int(sqrt(translational_coefficients_sectorial_init.shape[-1])) + 1) // 2
     ret = xp.zeros(
         (*shape, ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)), dtype=dtype, device=device
     )
@@ -361,7 +370,7 @@ def translational_coefficients_all(
         (
             "translational",
             "cuda" if "cuda" in str(device) else "parallel",
-            complex128 if dtype == xp.complex128 else complex64,
+            dtype,
         )
     ](
         translational_coefficients_sectorial_init,
@@ -372,6 +381,65 @@ def translational_coefficients_all(
         dtype=dtype,
         device=device,
     )[: ndim_harm(n_end), : ndim_harm(n_end)]
+
+
+def rotational_coefficients_all(
+    *,
+    rotational_coefficients_init: Array,
+    theta: Array,
+    phi: Array,
+    xi: Array,
+) -> tuple[Array, ...]:
+    """Rotational coefficients $ T^{m',m}_{n'=n} $
+
+    Parameters
+    ----------
+    rotational_coefficients_init : Array
+        Initial rotational coefficients $ T^{m',0}_{n} $
+        of shape (..., ndim_harm(2 * n_end - 1),)
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    xi : Array
+        azimuthal angle of shape (...,)
+
+    Returns
+    -------
+    tuple[Array, ...]
+        Rotational coefficients $ T^{m',m}_{n'=n} $
+        of shape (..., 2n+1, 2n+1) for n in [0, n_end-1]
+    """
+    xp = array_namespace(rotational_coefficients_init, theta, phi, xi)
+    dtype = rotational_coefficients_init.dtype
+    device = rotational_coefficients_init.device
+    shape = rotational_coefficients_init.shape[:-1]
+    n_end = (int(sqrt(rotational_coefficients_init.shape[-1])) + 1) // 2
+    ret = xp.zeros(
+        (*shape, n_rotational_coefficients(2 * n_end - 1)),
+        dtype=dtype,
+        device=device,
+    )
+    _impl[("rotational", "cuda" if "cuda" in str(device) else "parallel", dtype)](
+        rotational_coefficients_init,
+        theta,
+        phi,
+        xi,
+        ret,
+    )
+    ret = xp.asarray(
+        ret,
+        dtype=dtype,
+        device=device,
+    )
+    result = []
+    for n in range(n_end):
+        result.append(
+            ret[..., n_rotational_coefficients(n) : n_rotational_coefficients(n + 1)].reshape(
+                *shape, 2 * n + 1, 2 * n + 1
+            )
+        )
+    return tuple(result)
 
 
 def translational_coefficients(
@@ -411,6 +479,52 @@ def translational_coefficients(
         kr, theta, phi, same, n_end
     )
     return translational_coefficients_all(
-        n_end=n_end,
         translational_coefficients_sectorial_init=translational_coefficients_sectorial_init_,
+    )
+
+
+def rotational_coefficients(
+    theta: Array, phi: Array | None, xi: Array | None, *, n_end: int
+) -> tuple[Array, ...]:
+    r"""Rotational coefficients $ T^{m',m}_{n'=n} $.
+
+    .. math::
+        Y_n^m (\theta, \phi) &:=
+        (-1)^m \sqrt{\frac{(2n+1)(n-\left|m\right|)!}{4 \pi (n+\left|m\right|)!}}
+        P_n^{\left|m\right|} (\cos \theta) e^{i m \phi}
+
+    Parameters
+    ----------
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array | None
+        azimuthal angle of shape (...,). If None, treated as 0.
+    xi : Array | None
+        azimuthal angle of shape (...,). If None, treated as 0.
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Rotational coefficients $ T^{m',m}_{n'=n} $
+        of shape (..., 2n+1, 2n+1) for n in [0, n_end-1]
+    """
+    xp = array_namespace(theta, phi, xi)
+    if phi is None and xi is None:
+        is_real = True
+        phi = xp.zeros_like(theta)
+        xi = xp.zeros_like(theta)
+    elif phi is not None and xi is not None:
+        is_real = False
+    else:
+        raise ValueError("phi and xi must be both None or both not None.")
+    rotational_coefficients_init_ = rotational_coefficients_init(theta, phi, n_end)
+    if is_real:
+        rotational_coefficients_init_ = xp.real(rotational_coefficients_init_)
+    return rotational_coefficients_all(
+        rotational_coefficients_init=rotational_coefficients_init_,
+        theta=theta,
+        phi=phi,
+        xi=xi,
     )
