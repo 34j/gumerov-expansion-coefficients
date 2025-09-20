@@ -248,4 +248,5 @@ def test_gumerov_table_rotational(xp: ArrayNamespaceFull) -> None:
     phi = xp.asarray(np.deg2rad(165))
     xi = xp.asarray(np.deg2rad(10))
     coef = rotational_coefficients(theta, phi, xi, n_end=6)
+    print(coef[0])
     assert coef[3][0, 2] == pytest.approx(0.34676 + 0.12621j, abs=1e-5)

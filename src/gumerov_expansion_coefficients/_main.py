@@ -280,14 +280,14 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         _ : Array
             Dummy return array for numba guvectorize
         """
-        n_end = (rotational_coefficients_init.shape[-1] + 1) // 2
+        n_end = (int(sqrt(rotational_coefficients_init.shape[-1])) + 1) // 2
         for n in prange(2 * n_end - 1):
             for md in prange(-n, n + 1):
                 ret[idx_rot(n, md, 0)] = rotational_coefficients_init[idx_i(n, md)]
 
         one_f = dtype_f(1)  # noqa: B023
-        one_minus_cos_theta = exp_phi * (one_f - cos(theta))
-        one_plus_cos_theta = exp_phi_conj * (one_f + cos(theta))
+        exp_phi_one_minus_cos_theta = exp_phi * (one_f - cos(theta))
+        exp_phi_conj_one_plus_cos_theta = exp_phi_conj * (one_f + cos(theta))
         sin_theta = sin(theta)
         for m in range(n_end - 1):
             for n in prange(2 + m, 2 * n_end - 1 - m):
@@ -299,16 +299,20 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
                             1
                             / 2
                             * (
-                                b(n, -md - 1) * one_minus_cos_theta * ret[idx_rot(n, md + 1, m)]
-                                - b(n, md - 1) * one_plus_cos_theta * ret[idx_rot(n, md - 1, m)]
+                                b(n, -md - 1)
+                                * exp_phi_one_minus_cos_theta
+                                * ret[idx_rot(n, md + 1, m)]
+                                - b(n, md - 1)
+                                * exp_phi_conj_one_plus_cos_theta
+                                * ret[idx_rot(n, md - 1, m)]
                             )
                             - a(n - 1, md) * sin_theta * ret[idx_rot(n, md, m)]
                         )
                     )
         for n in prange(2, n_end):
             for md in prange(-n, n + 1):
-                for m in prange(n + 1):
-                    ret[idx_rot(n, -md, -m)] = ret[idx_rot(n, md, m)]
+                for m in prange(1, n + 1):
+                    ret[idx_rot(n, -md, -m)] = ret[idx_rot(n, md, m)].conjugate()
 
     _args: dict[str, tuple[list[Any], str]] = {
         "translational": (
@@ -416,6 +420,7 @@ def rotational_coefficients_all(
         dtype=dtype,
         device=device,
     )
+    print(rotational_coefficients_init.shape, theta.shape, phi.shape, xi.shape, ret.shape)
     _impl[
         (
             "rotational",
