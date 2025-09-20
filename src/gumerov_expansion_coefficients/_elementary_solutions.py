@@ -55,7 +55,12 @@ def minus_1_power(x: Array | int, /) -> Array | int:
 
 
 def RS_all(
-    kr: Array, theta: Array, phi: Array, *, n_end: int, type: Literal["regular", "singular"]
+    kr: Array | None,
+    theta: Array,
+    phi: Array,
+    *,
+    n_end: int,
+    type: Literal["regular", "singular", "harmonics"],
 ) -> Array:
     r"""Regular / Singular elementary solution of 3D Helmholtz equation.
 
@@ -70,7 +75,7 @@ def RS_all(
 
     Parameters
     ----------
-    kr : Array
+    kr : Array | None
         k * r of shape (...,)
     theta : Array
         polar angle of shape (...,)
@@ -86,23 +91,27 @@ def RS_all(
         3D Helmholtz equation of shape (..., n_end**2)
     """
     xp = array_namespace(kr, theta, phi)
-    device = kr.device
-    dtype = kr.dtype
-    if dtype == xp.float32:
-        dtype = xp.complex64
-    elif dtype == xp.float64:
-        dtype = xp.complex128
+    device = theta.device
+    dtype = xp.result_type(kr, theta, phi, xp.complex64)
     n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
-    kr = to_device(kr, "cpu")
+    if kr is not None:
+        kr = to_device(kr, "cpu")
     theta = to_device(theta, "cpu")
     phi = to_device(phi, "cpu")
-    tmp = spherical_jn(n, kr[..., None])
-    if type == "singular":
-        tmp = tmp + 1j * spherical_yn(n, kr[..., None])
+    Y = minus_1_power((xp.abs(m) - m) // 2) * np.moveaxis(
+        sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1
+    )
+    if type == "harmonics":
+        result = Y
+    else:
+        if kr is None:
+            raise ValueError("kr must be provided when type is 'regular' or 'singular'.")
+        tmp = spherical_jn(n, kr[..., None])
+        if type == "singular":
+            tmp = tmp + 1j * spherical_yn(n, kr[..., None])
+        result = tmp * Y
     return xp.asarray(
-        minus_1_power((xp.abs(m) - m) // 2)
-        * tmp
-        * np.moveaxis(sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1),
+        result,
         dtype=dtype,
         device=device,
     )

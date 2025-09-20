@@ -1,5 +1,5 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
-from math import sqrt
+from math import cos, sin, sqrt
 from typing import Any
 
 import numba
@@ -47,7 +47,7 @@ minus_1_power_jit = jit(inline="always")(minus_1_power)
 def translational_coefficients_sectorial_init(
     kr: Array, theta: Array, phi: Array, same: bool, n_end: int, /
 ) -> Array:
-    """Initial values of sectorial translational coefficients (E|F)^{m',0}_{n', 0}
+    """Initial values of sectorial translational coefficients $ (E|F)^{m',0}_{n', 0} $
 
     Parameters
     ----------
@@ -81,6 +81,32 @@ def translational_coefficients_sectorial_init(
     )
 
 
+def rotational_coefficients_init(theta: Array, phi: Array, n_end: int, /) -> Array:
+    """Initial values of rotational coefficients $ T^{m',0}_{n} $.
+
+    Parameters
+    ----------
+    theta : Array
+        polar angle of shape (...,)
+    phi : Array
+        azimuthal angle of shape (...,)
+    n_end : int
+        Maximum degree of spherical harmonics.
+
+    Returns
+    -------
+    Array
+        Initial rotational coefficients of shape (..., ndim_harm(n_end),)
+    """
+    xp = array_namespace(theta, phi)
+    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device=theta.device)
+    # 4.66
+    return (
+        xp.sqrt(xp.asarray(4.0, dtype=theta.dtype, device=theta.device) * xp.pi / (2 * n + 1))
+        * RS_all(None, theta, phi, n_end=n_end, type="harmonics")[..., idx(n, -m)]
+    )
+
+
 @jit(inline="always")
 def _set_coef(a: Array, nd: int, md: int, n: int, m: int, value: float, swap: bool = False) -> None:
     if swap:
@@ -100,12 +126,12 @@ def _get_coef(a: Array, nd: int, md: int, n: int, m: int, swap: bool = False) ->
 def _translational_coefficients_all(
     translational_coefficients_sectorial_init: Array, ret: Array, _: Array, /
 ) -> None:
-    """Translational coefficients (E|F)^{m',m}_{n',n}
+    """Translational coefficients $ (E|F)^{m',m}_{n',n} $
 
     Parameters
     ----------
     translational_coefficients_sectorial_init : Array
-        Initial sectorial translational coefficients (E|F)^{m',0}_{n', 0}
+        Initial sectorial translational coefficients $ (E|F)^{m',0}_{n', 0} $
         of shape (..., ndim_harm(2 * n_end - 1),)
     ret : Array
         Empty array to store the result of shape (..., ndim_harm(n_end), ndim_harm(n_end))
@@ -179,7 +205,16 @@ def _translational_coefficients_all(
                         _set_coef(ret, n1, m1, n2 + 1, m2, tmp / a(n2, m2), swap=m1_is_md)  # 2nd
 
 
-_translational_coefficients_all_impl = {}
+def idx_rot(n: int, md: int, m: int, /) -> int:
+    n_times_2_plus_1 = 2 * n + 1
+    return (
+        ((n - 1) * n * (2 * n - 1)) // 6
+        + n_times_2_plus_1 * (md % n_times_2_plus_1)
+        + (m % n_times_2_plus_1)
+    )
+
+
+_impl = {}
 
 for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
 
@@ -201,21 +236,100 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         else:
             return -tmp
 
-    _numba_args: tuple[list[Any], str] = (
-        [(dtype_c[:], dtype_c[:, :], dtype_c)],
-        "(n),(n,n)->()",
-    )
-    _translational_coefficients_all_impl[("parallel", dtype_c)] = numba.guvectorize(
-        *_numba_args, target="parallel"
-    )(_translational_coefficients_all)
+    def _rotational_coefficients_all(
+        rotational_coefficients_init: Array,
+        theta: Array,
+        phi: Array,
+        xi: Array,
+        ret: Array,
+        _: Array,
+        /,
+    ) -> None:
+        """Rotational coefficients $ T^{m',m}_{n'=n} $
 
-    try:
-        _translational_coefficients_all_impl[("cuda", dtype_c)] = numba.guvectorize(
-            *_numba_args,
-            target="cuda",
-        )(_translational_coefficients_all)
-    except CudaSupportError:
-        _translational_coefficients_all_impl[("cuda", dtype_c)] = None
+        Parameters
+        ----------
+        rotational_coefficients_init : Array
+            Initial rotational coefficients $ T^{m',0}_{n} $
+            of shape (..., ndim_harm(2 * n_end - 1),)
+        theta : Array
+            polar angle of shape (...,)
+        phi : Array
+            azimuthal angle of shape (...,)
+        xi : Array
+            azimuthal angle of shape (...,)
+        ret : Array
+            Empty array to store the result of shape (..., (N_end-1)(N_end)(2*N_end-1) / 6)
+            where N_end = 2 * n_end - 1
+        _ : Array
+            Dummy return array for numba guvectorize
+        """
+        n_end = (ret.shape[-3] + 1) // 2
+        for n in prange(2 * n_end - 1):
+            for md in prange(-n, n + 1):
+                ret[idx_rot(n, md, 0)] = rotational_coefficients_init[idx_i(n, md)]
+
+        one_f = dtype_f(1)  # noqa: B023
+        one_j = dtype_c(1j)  # noqa: B023
+        if phi == 0:
+            exp_phi = one_f
+            exp_phi_conj = one_f
+        else:
+            exp_phi = cos(phi) + one_j * sin(phi)
+            exp_phi_conj = cos(phi) - one_j * sin(phi)
+        if xi == 0:
+            exp_xi = one_f
+        else:
+            exp_xi = cos(xi) + one_j * sin(xi)
+        one_minus_cos_theta = exp_phi * (one_f - cos(theta))
+        one_plus_cos_theta = exp_phi_conj * (one_f + cos(theta))
+        sin_theta = sin(theta)
+        for m in range(n_end - 1):
+            for n in prange(2 + m, 2 * n_end - 1 - m):
+                for md in prange(-n + 1, n):
+                    ret[idx_rot(n - 1, md, m + 1)] = (
+                        exp_xi
+                        / (b(n, m))
+                        * (
+                            1
+                            / 2
+                            * (
+                                b(n, -md - 1) * one_minus_cos_theta * ret[idx_rot(n, md + 1, m)]
+                                - b(n, md - 1) * one_plus_cos_theta * ret[idx_rot(n, md - 1, m)]
+                            )
+                            - a(n - 1, md) * sin_theta * ret[idx_rot(n, md, m)]
+                        )
+                    )
+        for n in prange(2, n_end):
+            for md in prange(-n, n + 1):
+                for m in prange(n + 1):
+                    ret[idx_rot(n, -md, -m)] = ret[idx_rot(n, md, m)]
+
+    _args: dict[str, tuple[list[Any], str]] = {
+        "translational": (
+            [(dtype_c[:], dtype_c[:, :], dtype_c)],
+            "(n),(n,n)->()",
+        ),
+        "rotational": (
+            [
+                (dtype_f[:], dtype_f, dtype_f, dtype_f, dtype_f, dtype_f),
+                (dtype_c[:], dtype_f, dtype_f, dtype_f, dtype_c, dtype_f),
+            ],
+            "(n),( ),( ),( ),(m)->()",
+        ),
+    }
+    for k in ["translational", "rotational"]:
+        _impl[(k, "parallel", dtype_c)] = numba.guvectorize(*_args[k], target="parallel")(
+            _translational_coefficients_all
+        )
+
+        try:
+            _impl[(k, "cuda", dtype_c)] = numba.guvectorize(
+                *_args[k],
+                target="cuda",
+            )(_translational_coefficients_all)
+        except CudaSupportError:
+            _impl[(k, "cuda", dtype_c)] = None
 
 
 def translational_coefficients_all(
@@ -243,8 +357,9 @@ def translational_coefficients_all(
     ret = xp.zeros(
         (*shape, ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)), dtype=dtype, device=device
     )
-    _translational_coefficients_all_impl[
+    _impl[
         (
+            "translational",
             "cuda" if "cuda" in str(device) else "parallel",
             complex128 if dtype == xp.complex128 else complex64,
         )
