@@ -335,7 +335,6 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
             )(func)
         except CudaSupportError:
             _impl[(k, "cuda", dtype_c)] = None  # type: ignore
-print(list(_impl.keys()))
 
 
 def translational_coefficients_all(
@@ -367,7 +366,7 @@ def translational_coefficients_all(
         (
             "translational",
             "cuda" if "cuda" in str(device) else "parallel",
-            complex64 if dtype == complex64 else complex128,
+            complex64 if "complex64" in str(dtype) else complex128,
         )
     ](
         translational_coefficients_sectorial_init,
@@ -421,7 +420,7 @@ def rotational_coefficients_all(
         (
             "rotational",
             "cuda" if "cuda" in str(device) else "parallel",
-            complex64 if dtype == complex64 else complex128,
+            complex64 if "complex64" in str(dtype) else complex128,
         )
     ](
         rotational_coefficients_init,

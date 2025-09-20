@@ -93,12 +93,12 @@ def RS_all(
     xp = array_namespace(kr, theta, phi)
     device = theta.device
     dtype = xp.result_type(kr, theta, phi, xp.complex64)
-    n, m = idx_all(n_end, xp=xp, dtype=xp.int32, device="cpu")
+    n, m = idx_all(n_end, xp=np, dtype=np.int32, device="cpu")
     if kr is not None:
-        kr = to_device(kr, "cpu")
-    theta = to_device(theta, "cpu")
-    phi = to_device(phi, "cpu")
-    Y = minus_1_power((xp.abs(m) - m) // 2) * np.moveaxis(
+        kr = np.asarray(to_device(kr, "cpu"))
+    theta = np.asarray(to_device(theta, "cpu"))
+    phi = np.asarray(to_device(phi, "cpu"))
+    Y = minus_1_power((np.abs(m) - m) // 2) * np.moveaxis(
         sph_harm_y_all(n_end - 1, n_end - 1, theta, phi)[n, m, ...], 0, -1
     )
     if type == "harmonics":
