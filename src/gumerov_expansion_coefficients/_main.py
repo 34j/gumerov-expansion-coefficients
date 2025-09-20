@@ -1,6 +1,6 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
 from math import cos, sin, sqrt
-from typing import Any
+from typing import Any, Literal
 
 import numba
 from array_api._2024_12 import Array
@@ -225,7 +225,9 @@ def idx_rot(n: int, md: int, m: int, /) -> int:
     )
 
 
-_impl = {}
+_impl: dict[
+    tuple[Literal["translational", "rotational"], Literal["parallel", "cuda"], Any], Any
+] = {}
 
 for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
 
@@ -325,14 +327,15 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         ("translational", _translational_coefficients_all),
         ("rotational", _rotational_coefficients_all),
     ):
-        _impl[(k, "parallel", dtype_c)] = numba.guvectorize(*_args[k], target="parallel")(func)
+        _impl[(k, "parallel", dtype_c)] = numba.guvectorize(*_args[k], target="parallel")(func)  # type: ignore
         try:
-            _impl[(k, "cuda", dtype_c)] = numba.guvectorize(
+            _impl[(k, "cuda", dtype_c)] = numba.guvectorize(  # type: ignore
                 *_args[k],
                 target="cuda",
             )(func)
         except CudaSupportError:
-            _impl[(k, "cuda", dtype_c)] = None
+            _impl[(k, "cuda", dtype_c)] = None  # type: ignore
+print(list(_impl.keys()))
 
 
 def translational_coefficients_all(
@@ -364,7 +367,7 @@ def translational_coefficients_all(
         (
             "translational",
             "cuda" if "cuda" in str(device) else "parallel",
-            dtype,
+            complex64 if dtype == complex64 else complex128,
         )
     ](
         translational_coefficients_sectorial_init,
@@ -414,7 +417,13 @@ def rotational_coefficients_all(
         dtype=dtype,
         device=device,
     )
-    _impl[("rotational", "cuda" if "cuda" in str(device) else "parallel", dtype)](
+    _impl[
+        (
+            "rotational",
+            "cuda" if "cuda" in str(device) else "parallel",
+            complex64 if dtype == complex64 else complex128,
+        )
+    ](
         rotational_coefficients_init,
         theta,
         xp.exp(phi * 1j),
