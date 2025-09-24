@@ -12,7 +12,10 @@ from gumerov_expansion_coefficients._elementary_solutions import RS_all, idx_all
 from gumerov_expansion_coefficients._main import (
     idx,
     idx_i,
+    idx_rot,
+    n_rotational_coefficients,
     ndim_harm,
+    rotational_coefficients,
     translational_coefficients,
     translational_coefficients_sectorial_init,
 )
@@ -180,7 +183,7 @@ def test_main_all(xp: ArrayNamespaceFull, same: bool) -> None:
     assert xp.all(xpx.isclose(actual, expected, atol=1e-6, rtol=1e-6))
 
 
-def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
+def test_gumerov_table_translational(xp: ArrayNamespaceFull) -> None:
     k = 1.0
 
     x = xp.asarray([-1.0, 1.0, 0.0])
@@ -210,3 +213,40 @@ def test_gumerov_table(xp: ArrayNamespaceFull) -> None:
         t_coef = t_coef[: ndim_harm(n_end)]
         y_S_sum = xp.sum(t_coef * x_R[: ndim_harm(n_end), None], axis=0)
         assert y_S_sum[idx_i(5, 2)] == pytest.approx(expected[n_end - 1], abs=1e-6)
+
+
+def test_idx_rot() -> None:
+    assert idx_rot(0, 0, 0) == 0 == n_rotational_coefficients(1) - 1
+    assert idx_rot(1, 0, 0) == 1
+    assert idx_rot(1, 0, 1) == 2
+    assert idx_rot(1, 0, -1) == 3
+    assert idx_rot(1, 1, 0) == 4
+    assert idx_rot(1, 1, 1) == 5
+    assert idx_rot(1, 1, -1) == 6
+    assert idx_rot(1, -1, 0) == 7
+    assert idx_rot(1, -1, 1) == 8
+    assert idx_rot(1, -1, -1) == 9 == n_rotational_coefficients(2) - 1
+    assert idx_rot(2, 0, 0) == 10
+    assert idx_rot(2, 0, 1) == 11
+    assert idx_rot(2, 0, 2) == 12
+    assert idx_rot(2, 0, -2) == 13
+    assert idx_rot(2, 0, -1) == 14
+    assert (
+        idx_rot(4, -1, -1)
+        == n_rotational_coefficients(5) - 1
+        == 1**2 + 3**2 + 5**2 + 7**2 + 9**2 - 1
+    )
+    assert (
+        idx_rot(5, -1, -1)
+        == n_rotational_coefficients(6) - 1
+        == 1**2 + 3**2 + 5**2 + 7**2 + 9**2 + 11**2 - 1
+    )
+
+
+def test_gumerov_table_rotational(xp: ArrayNamespaceFull) -> None:
+    theta = xp.asarray(np.deg2rad(35))
+    phi = xp.asarray(np.deg2rad(165))
+    xi = xp.asarray(np.deg2rad(10))
+    coef = rotational_coefficients(theta, phi, xi, n_end=6)
+    print(coef[0])
+    assert coef[3][0, 2] == pytest.approx(0.34676 + 0.12621j, abs=1e-5)
