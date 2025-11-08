@@ -1,5 +1,5 @@
 # https://github.com/search?q=gumerov+translation+language%3APython&type=code&l=Python
-from math import sqrt
+from math import prod, sqrt
 from typing import Any
 
 import numba
@@ -206,13 +206,12 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
         "(n),(n,n)->()",
     )
     _translational_coefficients_all_impl[("parallel", dtype_c)] = numba.guvectorize(
-        *_numba_args, target="parallel"
+        *_numba_args, target="parallel", cache=True
     )(_translational_coefficients_all)
 
     try:
         _translational_coefficients_all_impl[("cuda", dtype_c)] = numba.guvectorize(
-            *_numba_args,
-            target="cuda",
+            *_numba_args, target="cuda", cache=True
         )(_translational_coefficients_all)
     except CudaSupportError:
         _translational_coefficients_all_impl[("cuda", dtype_c)] = None
@@ -241,7 +240,9 @@ def translational_coefficients_all(
     device = translational_coefficients_sectorial_init.device
     shape = translational_coefficients_sectorial_init.shape[:-1]
     ret = xp.zeros(
-        (*shape, ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)), dtype=dtype, device=device
+        (prod(shape), ndim_harm(2 * n_end - 1), ndim_harm(2 * n_end - 1)),
+        dtype=dtype,
+        device=device,
     )
     _translational_coefficients_all_impl[
         (
@@ -252,11 +253,13 @@ def translational_coefficients_all(
         translational_coefficients_sectorial_init,
         ret,
     )
-    return xp.asarray(
+    ret = xp.asarray(
         ret,
         dtype=dtype,
         device=device,
-    )[: ndim_harm(n_end), : ndim_harm(n_end)]
+    )[..., : ndim_harm(n_end), : ndim_harm(n_end)]
+    ret = xp.reshape(ret, (*shape, *ret.shape[-2:]))
+    return ret
 
 
 def translational_coefficients(
