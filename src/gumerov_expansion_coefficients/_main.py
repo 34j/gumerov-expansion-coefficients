@@ -211,7 +211,7 @@ for dtype_f, dtype_c in ((float32, complex64), (float64, complex128)):
 
     try:
         _translational_coefficients_all_impl[("cuda", dtype_c)] = numba.guvectorize(
-            *_numba_args, target="cuda", cache=True
+            *_numba_args, target="cuda"
         )(_translational_coefficients_all)
     except CudaSupportError:
         _translational_coefficients_all_impl[("cuda", dtype_c)] = None
