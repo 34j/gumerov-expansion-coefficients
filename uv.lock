@@ -352,7 +352,7 @@ wheels = [
 
 [[package]]
 name = "gumerov-expansion-coefficients"
-version = "1.2.0"
+version = "1.2.1rc1"
 source = { editable = "." }
 dependencies = [
     { name = "array-api-compat" },

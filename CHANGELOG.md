@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.1-rc.1 (2025-11-08)
+
+### Bug fixes
+
+- Fix wrong shape returned from translational_coefficients_all() ([`5359845`](https://github.com/34j/gumerov-expansion-coefficients/commit/5359845ce494200a6aca4bfe5445ef46010a3e41))
+- Fix wrong shape returned from translational_coefficients_all() ([`f687fbd`](https://github.com/34j/gumerov-expansion-coefficients/commit/f687fbd57b2dbdb07222fa0f26089c1791c0cb6c))
+
 ## v1.2.0 (2025-09-19)
 
 ### Features
